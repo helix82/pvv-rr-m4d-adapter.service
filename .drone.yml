@@ -1,0 +1,311 @@
+kind: pipeline
+name: default
+type: docker
+
+steps:
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: cache
+        path: /cache
+    settings:
+      restore: true
+      mount:
+        - /cache
+
+  - name: build
+    image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: 1
+    settings:
+      registry: nexus.essocode.ru:5001
+      repo: nexus.essocode.ru:5001/ess/pvv-rr-m4d-adapter
+      insecure: true
+      cache: true
+      tags:
+        - latest
+        - ${DRONE_SOURCE_BRANCH/\//-}
+        - ${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT}
+      cache_from:
+        - nexus.essocode.ru:5001/ess/pvv-rr-m4d-adapter:master
+        - nexus.essocode.ru:5001/ess/pvv-rr-m4d-adapter:${DRONE_SOURCE_BRANCH/\//-}
+      dockerfile: ./build/Dockerfile
+      username:
+        from_secret: docker_login
+      password:
+        from_secret: docker_pass
+      config:
+        from_secret: dockerconfig
+      build_args:
+        from_secret: build_args_nexus
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+      - name: cache
+        path: /cache
+    depends_on:
+      - restore-cache
+
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: cache
+        path: /cache
+    settings:
+      rebuild: true
+      mount:
+        - /cache
+    depends_on:
+      - build
+
+
+  - name: create-helm-template
+    image: alpine/helm:3.12.3
+    commands:
+      - helm template pvv-rr-m4d-adapter ./deploy/helm --namespace dev --values ./deploy/helm/ocode-dev-values.yaml --set image.tag=${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT} > ./deploy/helm/k8s-pvv-rr-m4d-adapter.yaml
+    depends_on:
+      - rebuild-cache
+    when:
+      branch:
+        - master
+
+  - name: deploy
+    image: ghcr.io/bh90210/dron8s:latest
+    settings:
+      yaml: ./deploy/helm/k8s-pvv-rr-m4d-adapter.yaml
+      tag: ${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT}
+      kubeconfig:
+        from_secret: kubeconfig
+    depends_on:
+      - create-helm-template
+    when:
+      branch:
+        - master
+
+  - name: create-helm-template-release
+    image: alpine/helm:3.12.3
+    environment:
+      HELM_PATH: ./deploy/helm
+      HELM_NAMESPACE_ZK: release-zk
+      HELM_NAMESPACE_OK: release-ok
+    commands:
+      - helm template pvv-rr-m4d-adapter-ok $HELM_PATH --namespace $HELM_NAMESPACE_OK --values $HELM_PATH/ocode-rel-ok-values.yaml --set image.tag=${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT} > $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml
+      - helm template pvv-rr-m4d-adapter-zk $HELM_PATH --namespace $HELM_NAMESPACE_ZK --values $HELM_PATH/ocode-rel-zk-values.yaml --set image.tag=${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT} > $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
+      - test -s $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml
+      - test -s $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
+      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml > $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
+      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml >> $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
+      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
+    depends_on:
+      - rebuild-cache
+    when:
+      branch:
+        - rel
+
+  - name: deploy-release
+    image: ghcr.io/bh90210/dron8s:latest
+    settings:
+      yaml: ./deploy/helm/k8s-pvv-rr-m4d-adapter-combined.yaml
+      tag: ${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT}
+      kubeconfig:
+        from_secret: kubeconfig
+    depends_on:
+      - create-helm-template-release
+    when:
+      branch:
+        - rel
+
+  - name: update-release-notes
+    image: alpine
+    environment:
+      DRONE_DEBUG: true
+    commands:
+      - apk add --no-cache jq git
+      - set -x
+      - |
+        START_COMMIT="Релиз 1.0"
+        END_COMMIT="HEAD"
+        if ! git show $START_COMMIT &> /dev/null; then
+            START_COMMIT="$(git rev-list --max-parents=0 HEAD)"
+        fi
+        
+        commit_list=$(git log --pretty=format:'%s' $START_COMMIT..$END_COMMIT)
+        echo "Список коммитов:"
+        echo "$commit_list"
+        
+        if [ -z "$commit_list" ]; then
+            echo "Нет коммитов в выбранном диапазоне."
+            exit 0
+        fi
+        
+        commit_list=$(git log --pretty=format:'%s' $START_COMMIT..$END_COMMIT)
+        release_notes=$(echo "$commit_list" | grep -vE "^(Merge|Revert|fixup!|squash!|docs\:|style\:|chore\:|build\:|test\:)")
+        release_notes=$(echo "$release_notes" | awk '!seen[$0]++')
+        echo "$release_notes" > release_notes.txt
+        
+        echo "Файл release_notes.txt создан."
+
+    depends_on:
+      - rebuild-cache
+    when:
+      branch:
+        - release-*
+
+  - name: push-src-to-git.cifro.tech
+    image: alpine:3.12
+    environment:
+      DRONE_DEBUG: true
+      GITLAB_PAT_TOKEN:
+        from_secret: gitlab_pat_token
+      GIT_REPO_V2:
+        from_secret: git_repo_v2
+    commands:
+      - set -x
+      - apk add --no-cache git rsync
+      - git config --global user.name "SEP CI"
+      - git config --global user.email "sep_user@cifro.tech"
+      - echo "$GITLAB_PAT_TOKEN"
+      - git clone https://x-access-token:$GITLAB_PAT_TOKEN@git.cifro.tech/sep/pvv-rr-m4d-adapter.service.git repo
+      - cd repo
+      - echo "Создаем новую ветку"
+      - NEW_BRANCH_NAME=$(echo ${DRONE_SOURCE_BRANCH} | sed 's/^release-//')
+      - git checkout -b $NEW_BRANCH_NAME
+      - echo "Копируем содержимое, исключая папку repo"
+      - rsync -av --exclude='repo' ../* .
+      - echo "Добавляем изменения"
+      - git add .
+      - git commit -m "Релиз версии $NEW_BRANCH_NAME"
+      - echo "Пушим новую ветку на удаленный репозиторий"
+      - git push https://x-access-token:$GITLAB_PAT_TOKEN@git.cifro.tech/sep/pvv-rr-m4d-adapter.service.git $NEW_BRANCH_NAME
+      - cd ..
+      - rm -rf repo
+    depends_on:
+      - update-release-notes
+    when:
+      branch:
+        - release-*
+
+  - name: prerelease-push-src-to-git.cifro.tech
+    image: alpine:3.12
+    environment:
+      DRONE_DEBUG: true
+      GITLAB_PAT_TOKEN:
+        from_secret: gitlab_pat_token
+      GIT_REPO_V2:
+        from_secret: git_repo_v2
+    commands:
+      - set -x
+      - apk add --no-cache git rsync
+      - git config --global user.name "SEP CI"
+      - git config --global user.email "sep_user@cifro.tech"
+      - echo "$GITLAB_PAT_TOKEN"
+      - git clone https://x-access-token:$GITLAB_PAT_TOKEN@git.cifro.tech/sep/pvv-rr-m4d-adapter.service.git repo
+      - cd repo
+      - echo "Создаем новую ветку"
+      - VERSION=$(echo ${DRONE_SOURCE_BRANCH} | sed 's/^prerelease-//')
+      - git checkout -B $DRONE_SOURCE_BRANCH
+      - echo "Копируем содержимое, исключая папку repo"
+      - rsync -av --exclude='repo' ../* .
+      - echo "Добавляем изменения"
+      - git add .
+      - git commit -m "Пререлиз версии $VERSION"
+      - echo "Пушим новую ветку на удаленный репозиторий"
+      - git push https://x-access-token:$GITLAB_PAT_TOKEN@git.cifro.tech/sep/pvv-rr-m4d-adapter.service.git $DRONE_SOURCE_BRANCH
+      - cd ..
+      - rm -rf repo
+    depends_on:
+      - rebuild-cache
+    when:
+      branch:
+        - prerelease-*
+
+  - name: notify-deploy-success
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram_bot_token
+      to:
+        from_secret: telegram_chat_id
+      message: |
+        🚀 Деплой успешно отправлен!
+        Сборка #{{build.number}}
+        Репозиторий: {{repo.name}}
+        Ветка: {{commit.branch}}
+        Подробнее: [Ссылка на сборку]({{build.link}})                
+    when:
+      status: [ success ]
+    depends_on:
+      - deploy
+
+  - name: notify-deploy-failure
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram_bot_token
+      to:
+        from_secret: telegram_chat_id
+      message: |
+        ❌ Деплой не отправлен!
+        Сборка #{{build.number}}
+        Репозиторий: {{repo.name}}
+        Ветка: {{commit.branch}}
+        Подробнее: [Ссылка на сборку]({{build.link}})                
+    when:
+      status: [ failure ]
+    depends_on:
+      - deploy
+
+  - name: notify-build-status
+    image: appleboy/drone-telegram
+    settings:
+      token:
+        from_secret: telegram_bot_token
+      to:
+        from_secret: telegram_chat_id
+      message: |
+        {{#eq build.status "success"}}📣 Сборка #{{build.number}} завершилась со статусом: {{build.status}}!{{/eq}}
+        {{#eq build.status "failure"}}🧱 Сборка #{{build.number}} завершилась со статусом: {{build.status}}!{{/eq}}
+        Репозиторий: {{repo.name}}
+        Ветка: {{commit.branch}}
+        Автор: {{commit.author}}
+        Сообщение: {{commit.message}}
+        Подробнее: [Ссылка на сборку]({{build.link}})                
+    when:
+      status: [ success, failure ]
+    depends_on:
+      - notify-deploy-success
+      - notify-deploy-failure
+
+image_pull_secrets:
+  - dockerconfig
+
+node:
+  node: 149.154.64.5
+
+trigger:
+  event:
+    include:
+      - push
+      - tag
+      - pull_request
+      - rollback
+
+#services:
+#  - name: postgres
+#    image: postgres:14.8-alpine3.18
+#    ports:
+#      - 5432
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
+#      POSTGRES_DB: synapi_test
+
+volumes:
+  - name: out
+    temp: {}
+  - name: dockersock
+    host:
+      path: /var/run/docker.sock
+  - name: cache
+    host:
+      path: /tmp/.buildx-cache

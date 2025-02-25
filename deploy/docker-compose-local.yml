@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    container_name: postgres
+    image: postgres:14
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: pvv_rr_m4d_adapter_scheme
+    healthcheck:
+      test: "exit 0"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./pgdata_main:/var/lib/pvv_rr_m4d_adapter_scheme/data
+
+  app:
+    container_name: pvv-rr-m4d-adapter
+    network_mode: "host"
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+      args:
+        NEXUS_RAW_USERNAME: ocode-raw
+        NEXUS_RAW_PASSWORD: qqQQ1234
+    ports:
+      - 8057:8057
+      - 8001:8001
+      - 5006:5006
+

@@ -1,0 +1,26 @@
+server:
+  port: ${SERVER_PORT:8057}
+
+logging:
+  level:
+    su.opencode.digsigcik.pvv-rr-m4d-adapter: DEBUG
+    org.springframework.web: DEBUG
+    org.apache.http: DEBUG
+
+spring:
+  #  hotfix for running swagger in spring boot 2
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+api:
+  base-url: http://some_url
+  user-id: some_user_id
+
+
+#Swagger
+springdoc:
+  api-docs:
+    # It should be off for PROD
+    enabled: true
+  server:
+    url: ${SWAGGER_URL:http://localhost:8057}

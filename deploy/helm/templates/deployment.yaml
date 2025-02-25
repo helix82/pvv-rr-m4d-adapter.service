@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}-deployment
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      {{- if .Values.hostAliases }}
+      hostAliases:
+        {{- range .Values.hostAliases }}
+        - ip: "{{ .ip }}"
+          hostnames:
+            {{- range .hostnames }}
+            - "{{ . }}"
+            {{- end }}
+        {{- end }}
+      {{- end }}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: {{ .Values.appName }}-dev
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          command:
+            - java
+            - "-Xms{{ .Values.jvmOptions.xms }}"
+            - "-Xmx{{ .Values.jvmOptions.xmx }}"
+            - "{{ .Values.jvmOptions.gc }}"
+            - "-Dcom.sun.management.jmxremote"
+            - "-Dcom.sun.management.jmxremote.port={{ .Values.jvmOptions.portJMX }}"
+            - "-Dcom.sun.management.jmxremote.authenticate={{ .Values.jvmOptions.authenticateJMX }}"
+            - "-Dcom.sun.management.jmxremote.ssl={{ .Values.jvmOptions.sslJMX }}"
+            - "-Djava.rmi.server.hostname={{ .Values.jvmOptions.hostnameJMX }}"
+            - "-Dcom.sun.management.jmxremote.local.only={{ .Values.jvmOptions.localOnlyJMX }}"
+            - "-XX:MinHeapFreeRatio={{ .Values.jvmOptions.minHeapFreeRatio }}"
+            - "-XX:MaxHeapFreeRatio={{ .Values.jvmOptions.maxHeapFreeRatio }}"
+            - -jar
+            - "{{ .Values.jarFile }}"
+          ports:
+            - containerPort: {{ .Values.service.port }}
+            - containerPort: {{ .Values.service.portJMX }}
+          env:
+            - name: SWAGGER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.SWAGGER_URL }}
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.SPRING_DATASOURCE_URL }}
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.SPRING_DATASOURCE_USERNAME }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.SPRING_DATASOURCE_PASSWORD }}
+            - name: SERVER_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.SERVER_PORT }}
+            - name: AUDIT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.AUDIT_URL }}
+            - name: RESOURCE_ACCESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.RESOURCE_ACCESS }}
+      imagePullSecrets:
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}

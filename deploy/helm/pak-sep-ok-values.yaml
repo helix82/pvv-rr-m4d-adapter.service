@@ -1,0 +1,76 @@
+
+namespace: master
+
+image:
+  repository: 10.0.248.79:5000/sep/pvv-rr-m4d-adapter.service
+  tag:
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8057
+  targetPort: 8057
+  portJMX: 9010
+  targetPortJMX: 9010
+
+replicaCount: 1
+
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  tlsEnabled: false  # New parameter to control TLS
+  hosts:
+    - host: pvv-rr-m4d-adapter.pep.cikcp.ru
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: pvv-rr-m4d-adapter-tls
+      hosts:
+        - pvv-rr-m4d-adapter.pep.cikcp.ru
+
+secret:
+  enabled: true
+  name: pvv-rr-m4d-adapter-back-cred
+  data:
+    #jdbc:postgresql://db-pgsql.pep.cp01.cikrf.cp:5432/pvv-rr-m4d-adapter_db
+    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vZGItcGdzcWwucGVwLmNwMDEuY2lrcmYuY3A6NTQzMi9tNGRfZGI=
+    SPRING_DATASOURCE_USERNAME: cGVw
+    #jwjljrrjy
+    SPRING_DATASOURCE_PASSWORD: andqbGpycmp5
+    SWAGGER_URL: aHR0cDovL200ZC5wZXAuY2lrY3AucnU=
+    #http://synapi-service.master.svc.cluster.local/api/v1/audit/external
+    AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLm1hc3Rlci5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
+    SERVER_PORT: ODA1Ng==
+    RESOURCE_ACCESS: cGVw
+
+jvmOptions:
+  xms: 2G
+  xmx: 64G
+  gc: "-XX:+UseG1GC"
+  minHeapFreeRatio: 10
+  maxHeapFreeRatio: 30
+  portJMX: 9010
+  authenticateJMX: false
+  sslJMX: false
+  hostnameJMX: localhost
+  localOnlyJMX: false
+
+jarFile: pvv-rr-m4d-adapter-0.0.1-SNAPSHOT.jar
+
+env:
+  SPRING_DATASOURCE_URL: SPRING_DATASOURCE_URL
+  SPRING_DATASOURCE_USERNAME: SPRING_DATASOURCE_USERNAME
+  SPRING_DATASOURCE_PASSWORD: SPRING_DATASOURCE_PASSWORD
+  SWAGGER_URL: SWAGGER_URL
+  AUDIT_URL: AUDIT_URL
+  SERVER_PORT: SERVER_PORT
+  RESOURCE_ACCESS: RESOURCE_ACCESS
+
+appName: pvv-rr-m4d-adapter
+
+imagePullSecrets:
+  - registrypullsecret
+
+resources: {}
