@@ -44,7 +44,7 @@ secret:
     SPRING_DATASOURCE_USERNAME: cm9vdA==
     SPRING_DATASOURCE_PASSWORD: cm9vdA==
     #https://pvv-rr-m4d-adapter.dev.essocode.ru
-    SWAGGER_URL: aHR0cHM6Ly9wdnYtZmstYWRhcHRlci5kZXYuZXNzb2NvZGUucnU=
+    SWAGGER_URL: aHR0cHM6Ly9wdnYtcnItbTRkLWFkYXB0ZXIuZGV2LmVzc29jb2RlLnJ1
     #http://synapi-service.dev.svc.cluster.local/api/v1/audit/external
     AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLmRldi5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
     SERVER_PORT: ODA1Ng==
