@@ -13,7 +13,7 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 api:
-  base-url: http://some_url
+  base-url: https://operator.cprr-it.weintegrator.com/api/v0
   user-id: some_user_id
 
 
