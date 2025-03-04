@@ -47,6 +47,8 @@ secret:
     AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLm9jb2RlLWRldi5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
     SERVER_PORT: ODA1Nw==
     RESOURCE_ACCESS: c2Vw
+    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/inbox/
+    GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9pbmJveC8K
 
 jvmOptions:
   xms: 2G
@@ -70,6 +72,7 @@ env:
   AUDIT_URL: AUDIT_URL
   SERVER_PORT: SERVER_PORT
   RESOURCE_ACCESS: RESOURCE_ACCESS
+  GET_PVV_CONTENT_URI: GET_PVV_CONTENT_URI
 
 appName: pvv-rr-m4d-adapter
 

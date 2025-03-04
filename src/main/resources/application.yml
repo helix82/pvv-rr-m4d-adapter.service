@@ -16,6 +16,8 @@ api:
   base-url: https://operator.cprr-it.weintegrator.com/api/v0
   user-id: some_user_id
 
+pvv:
+  get-message-content: ${GET_PVV_CONTENT_URI:http://localhost:8078/api/v1/inbox/}
 
 #Swagger
 springdoc:
