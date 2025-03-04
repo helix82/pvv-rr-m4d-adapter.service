@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.AuthResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
 
 import java.io.*;
 import java.net.UnknownHostException;
@@ -65,6 +66,42 @@ public class RealApiService {
                             HttpMethod.POST,
                             requestEntity,
                             M4dResponseInfo.class
+                    );
+                    responseInfo = response.getBody();
+                } catch (HttpClientErrorException e) {
+                    throw new RuntimeException("Server Error: " + e.getResponseBodyAsString());
+                } catch (Exception e) {
+                    throw new RuntimeException("Error: " + e.getMessage());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error: " + e.getMessage());
+            }
+        }
+        return responseInfo;
+    }
+
+    public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile) {
+        AuthResponse authResponse;
+        authResponse = getBearerRequest();
+        M4dRevokeResponseInfo responseInfo = null;
+
+        if (authResponse != null) {
+            HttpHeaders headers = createHeaders();
+            try {
+                headers.setAccept(Collections.singletonList(MediaType.ALL));
+                headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+                LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+                map.add("poaRevoke", new FileSystemResource(xmlFile));
+                map.add("signature", new FileSystemResource(sigFile));
+                HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
+
+                try {
+                    ResponseEntity<M4dRevokeResponseInfo> response = restTemplate.exchange(
+                            apiBaseUrl + "/poar-webapp/integration/poa/revoke",
+                            HttpMethod.POST,
+                            requestEntity,
+                            M4dRevokeResponseInfo.class
                     );
                     responseInfo = response.getBody();
                 } catch (HttpClientErrorException e) {
@@ -230,6 +267,81 @@ public class RealApiService {
         try {
             // Вызов API для создания запроса на регистрацию мчд в рр мчд
             M4dResponseInfo response = createM4dRequest(xmlFile, sigFile);
+            if (response == null) {
+                throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
+            }
+            return response;
+        } finally {
+            cleanupDirectory(tempDir);
+        }
+    }
+
+    public M4dRevokeResponseInfo processM4dRevokeZip(MultipartFile zipFile) {
+        // Создаем временную директорию для распаковки ZIP
+        Path tempDir;
+        try {
+            tempDir = Files.createTempDirectory("mchdRevokeZip");
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось создать временную директорию", e);
+        }
+
+        File xmlFile = null;
+        File sigFile = null;
+        int xmlCount = 0;
+        int sigCount = 0;
+        // Распаковка ZIP-архива и сохранение всех файлов
+        try (InputStream is = zipFile.getInputStream();
+             ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (!entry.isDirectory()) {
+                    File outFile = new File(tempDir.toFile(), entry.getName());
+                    try (OutputStream os = new FileOutputStream(outFile)) {
+                        byte[] buffer = new byte[4096];
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            os.write(buffer, 0, len);
+                        }
+                    }
+                    // Если расширение xml – увеличиваем счетчик и запоминаем файл
+                    if (entry.getName()
+                            .toLowerCase()
+                            .endsWith(".xml")) {
+                        xmlCount++;
+                        xmlFile = outFile;
+                    }
+                    // Если расширение sig – увеличиваем счетчик и запоминаем файл
+                    if (entry.getName()
+                            .toLowerCase()
+                            .endsWith(".sig")) {
+                        sigCount++;
+                        sigFile = outFile;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            cleanupDirectory(tempDir);
+            throw new RuntimeException("Ошибка распаковки ZIP файла: " + e.getMessage(), e);
+        }
+
+        if (xmlCount == 0) {
+            cleanupDirectory(tempDir);
+            throw new RuntimeException("XML-файл не найден в ZIP архиве.");
+        } else if (xmlCount > 1) {
+            cleanupDirectory(tempDir);
+            throw new RuntimeException("В архиве найдено более одного XML-файла.");
+        }
+        if (sigCount == 0) {
+            cleanupDirectory(tempDir);
+            throw new RuntimeException("SIG-файл не найден в ZIP архиве.");
+        } else if (sigCount > 1) {
+            cleanupDirectory(tempDir);
+            throw new RuntimeException("В архиве найдено более одного SIG-файла.");
+        }
+
+        try {
+            // Вызов API для создания запроса на регистрацию мчд в рр мчд
+            M4dRevokeResponseInfo response = createM4dRevokeRequest(xmlFile, sigFile);
             if (response == null) {
                 throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
             }

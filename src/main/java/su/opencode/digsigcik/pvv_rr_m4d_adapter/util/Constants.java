@@ -7,6 +7,7 @@ package su.opencode.digsigcik.pvv_rr_m4d_adapter.util;
 public interface Constants {
 
     String CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS = "Загрузить zip файл и получить статус МЧД через API РР МЧД";
+    String CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_REVOKE = "Загрузить zip файл и получить статус отзыва МЧД через API РР МЧД";
     String CONTROLLER_GET_M4D_BY_STATUS = "Получить статус МЧД через API РР МЧД";
     String API_RESPONSE_CODE_200_MESSAGE = "Успешно"; //Successfully
     String API_RESPONSE_CODE_201_MESSAGE = "Создано";
