@@ -45,7 +45,7 @@ secret:
     SWAGGER_URL: aHR0cHM6Ly9tNGQuZXNzb2NvZGUucnU=
     #http://synapi-service.ocode-dev.svc.cluster.local/api/v1/audit/external
     AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLm9jb2RlLWRldi5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
-    SERVER_PORT: ODA1Ng==
+    SERVER_PORT: ODA1Nw==
     RESOURCE_ACCESS: c2Vw
 
 jvmOptions:

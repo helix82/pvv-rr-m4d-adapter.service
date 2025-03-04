@@ -90,11 +90,11 @@ steps:
       HELM_NAMESPACE_OK: release-ok
     commands:
       - helm template pvv-rr-m4d-adapter-ok $HELM_PATH --namespace $HELM_NAMESPACE_OK --values $HELM_PATH/ocode-rel-ok-values.yaml --set image.tag=${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT} > $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml
-      - helm template pvv-rr-m4d-adapter-zk $HELM_PATH --namespace $HELM_NAMESPACE_ZK --values $HELM_PATH/ocode-rel-zk-values.yaml --set image.tag=${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT} > $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
+#      - helm template pvv-rr-m4d-adapter-zk $HELM_PATH --namespace $HELM_NAMESPACE_ZK --values $HELM_PATH/ocode-rel-zk-values.yaml --set image.tag=${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT} > $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
       - test -s $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml
-      - test -s $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
+#      - test -s $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
       - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml > $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
-      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml >> $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
+#      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml >> $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
       - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
     depends_on:
       - rebuild-cache

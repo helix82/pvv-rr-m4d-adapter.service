@@ -39,15 +39,15 @@ secret:
   enabled: true
   name: pvv-rr-m4d-adapter-back-cred
   data:
-    #jdbc:postgresql://217.79.22.46:5432/rel_ok_pvv-rr-m4d-adapter_db
-    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vMjE3Ljc5LjIyLjQ2OjU0MzIvcmVsX29rX200ZF9kYg==
+    #jdbc:postgresql://217.79.22.46:5432/rel_ok_pvv_rr_m4d_adapter_db
+    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vMjE3Ljc5LjIyLjQ2OjU0MzIvcmVsX29rX3B2dl9ycl9tNGRfYWRhcHRlcl9kYg==
     SPRING_DATASOURCE_USERNAME: cm9vdA==
     SPRING_DATASOURCE_PASSWORD: cm9vdA==
     #https://pvv-rr-m4d-adapter.rel.ok.essocode.ru
-    SWAGGER_URL: aHR0cHM6Ly9tNGQucmVsLm9rLmVzc29jb2RlLnJ1
+    SWAGGER_URL: aHR0cHM6Ly9wdnYtcnItbTRkLWFkYXB0ZXIucmVsLm9rLmVzc29jb2RlLnJ1
     #http://synapi-service.release-ok.svc.cluster.local/api/v1/audit/external
     AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLnJlbGVhc2Utb2suc3ZjLmNsdXN0ZXIubG9jYWwvYXBpL3YxL2F1ZGl0L2V4dGVybmFs
-    SERVER_PORT: ODA1Ng==
+    SERVER_PORT: ODA1Nw==
     #sep
     RESOURCE_ACCESS: c2Vw
 
