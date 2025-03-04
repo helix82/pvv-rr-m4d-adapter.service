@@ -34,18 +34,19 @@ secret:
   enabled: true
   name: pvv-rr-m4d-adapter-back-cred
   data:
-    #jdbc:postgresql://db-pgsql.pep.cp01.cikrf.cp:5432/pvv-rr-m4d-adapter_db
-    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vZGItcGdzcWwucGVwLmNwMDEuY2lrcmYuY3A6NTQzMi9tNGRfZGI=
+    #jdbc:postgresql://db-pgsql.pep.cp01.cikrf.cp:5432/pvv_rr_m4d_adapter_db
+    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vZGItcGdzcWwucGVwLmNwMDEuY2lrcmYuY3A6NTQzMi9wdnZfcnJfbTRkX2FkYXB0ZXJfZGI=
     SPRING_DATASOURCE_USERNAME: cGVw
     #jwjljrrjy
     SPRING_DATASOURCE_PASSWORD: andqbGpycmp5
-    SWAGGER_URL: aHR0cDovL200ZC5wZXAuY2lrY3AucnU=
+    #http://pvv-rr-m4d-adapter.pep.cikcp.ru
+    SWAGGER_URL: aHR0cDovL3B2di1yci1tNGQtYWRhcHRlci5wZXAuY2lrY3AucnU=
     #http://synapi-service.master.svc.cluster.local/api/v1/audit/external
     AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLm1hc3Rlci5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
     SERVER_PORT: ODA1Nw==
     RESOURCE_ACCESS: cGVw
-    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/inbox/
-    GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9pbmJveC8K
+    # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/inbox/
+    GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL2luYm94Lw==
 
 jvmOptions:
   xms: 2G

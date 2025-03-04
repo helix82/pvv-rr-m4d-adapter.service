@@ -34,8 +34,8 @@ secret:
   enabled: true
   name: pvv-rr-m4d-adapter-back-cred
   data:
-    #jdbc:postgresql://db-pgsql-n01.sep.ok.dev.cit.st:5432/pvv-rr-m4d-adapter_db
-    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vZGItcGdzcWwtbjAxLnNlcC5vay5kZXYuY2l0LnN0OjU0MzIvbTRkX2Ri
+    #jdbc:postgresql://db-pgsql-n01.sep.ok.dev.cit.st:5432/pvv_rr_m4d_adapter_db
+    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vZGItcGdzcWwtbjAxLnNlcC5vay5kZXYuY2l0LnN0OjU0MzIvcHZ2X3JyX200ZF9hZGFwdGVyX2Ri
     #pep
     SPRING_DATASOURCE_USERNAME: cGVw
     SPRING_DATASOURCE_PASSWORD: Y0VGQ2JsU1QyazcxZHJWTQ==
@@ -46,8 +46,8 @@ secret:
     SERVER_PORT: ODA1Nw==
     #sep
     RESOURCE_ACCESS: c2Vw
-    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/inbox/
-    GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9pbmJveC8K
+    # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/inbox/
+    GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL2luYm94Lw==
 
 jvmOptions:
   xms: 2G
