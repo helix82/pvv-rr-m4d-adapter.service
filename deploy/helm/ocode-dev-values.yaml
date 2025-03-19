@@ -65,6 +65,8 @@ jvmOptions:
   sslJMX: false
   hostnameJMX: localhost
   localOnlyJMX: false
+  timezone: UTC
+  encoding: UTF-8
 
 jarFile: pvv-rr-m4d-adapter-0.0.1-SNAPSHOT.jar
 
