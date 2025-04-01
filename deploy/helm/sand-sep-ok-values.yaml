@@ -3,7 +3,7 @@ namespace: master
 
 image:
   repository: dockerhub.cifro.tech/sep/pvv-rr-m4d-adapter.service
-  tag:
+  tag: latest
   pullPolicy: Always
 
 service:

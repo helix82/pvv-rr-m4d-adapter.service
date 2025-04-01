@@ -3,7 +3,7 @@ namespace: master
 
 image:
   repository: 10.0.182.84:5000/sep/pvv-rr-m4d-adapter.service
-  tag:
+  tag: latest
   pullPolicy: Always
 
 service:
