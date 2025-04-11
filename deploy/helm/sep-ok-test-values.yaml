@@ -40,7 +40,8 @@ secret:
     SPRING_DATASOURCE_PASSWORD: NTFWeGM5akJzODd6bFM=
     #http://pvv-rr-m4d-adapter.sep.ok.test.st
     SWAGGER_URL: aHR0cDovL3B2di1yci1tNGQtYWRhcHRlci5zZXAub2sudGVzdC5zdA==
-    AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLm1hc3Rlci5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
+    #http://log-service.master.svc.cluster.local:8055/api/v1/audit/external
+    AUDIT_URL: aHR0cDovL2xvZy1zZXJ2aWNlLm1hc3Rlci5zdmMuY2x1c3Rlci5sb2NhbDo4MDU1L2FwaS92MS9hdWRpdC9leHRlcm5hbA==
     SERVER_PORT: ODA1Nw==
     RESOURCE_ACCESS: cGVw
     # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/inbox/

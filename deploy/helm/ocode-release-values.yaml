@@ -43,8 +43,8 @@ secret:
     SPRING_DATASOURCE_USERNAME: cm9vdA==
     SPRING_DATASOURCE_PASSWORD: cm9vdA==
     SWAGGER_URL: aHR0cHM6Ly9tNGQuZXNzb2NvZGUucnU=
-    #http://synapi-service.ocode-dev.svc.cluster.local/api/v1/audit/external
-    AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLm9jb2RlLWRldi5zdmMuY2x1c3Rlci5sb2NhbC9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
+    #http://log-service.ocode-dev.svc.cluster.local:8055/api/v1/audit/external
+    AUDIT_URL: aHR0cDovL2xvZy1zZXJ2aWNlLm9jb2RlLWRldi5zdmMuY2x1c3Rlci5sb2NhbDo4MDU1L2FwaS92MS9hdWRpdC9leHRlcm5hbA==
     SERVER_PORT: ODA1Nw==
     RESOURCE_ACCESS: c2Vw
     # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/inbox/
