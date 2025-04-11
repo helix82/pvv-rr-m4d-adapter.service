@@ -45,8 +45,8 @@ secret:
     SPRING_DATASOURCE_PASSWORD: cm9vdA==
     #https://pvv-rr-m4d-adapter.rel.ok.essocode.ru
     SWAGGER_URL: aHR0cHM6Ly9wdnYtcnItbTRkLWFkYXB0ZXIucmVsLm9rLmVzc29jb2RlLnJ1
-    #http://synapi-service.release-ok.svc.cluster.local/api/v1/audit/external
-    AUDIT_URL: aHR0cDovL3N5bmFwaS1zZXJ2aWNlLnJlbGVhc2Utb2suc3ZjLmNsdXN0ZXIubG9jYWwvYXBpL3YxL2F1ZGl0L2V4dGVybmFs
+    #http://log-service.release-ok.svc.cluster.local:8055/api/v1/audit/external
+    AUDIT_URL: aHR0cDovL2xvZy1zZXJ2aWNlLnJlbGVhc2Utb2suc3ZjLmNsdXN0ZXIubG9jYWw6ODA1NS9hcGkvdjEvYXVkaXQvZXh0ZXJuYWw=
     SERVER_PORT: ODA1Nw==
     #sep
     RESOURCE_ACCESS: c2Vw
