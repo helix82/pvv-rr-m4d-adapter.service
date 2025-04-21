@@ -50,8 +50,8 @@ secret:
     GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL2luYm94Lw==
 
 jvmOptions:
-  xms: 2G
-  xmx: 64G
+  xms: 256m
+  xmx: 512m
   gc: "-XX:+UseG1GC"
   minHeapFreeRatio: 10
   maxHeapFreeRatio: 30
@@ -76,6 +76,15 @@ env:
   GET_PVV_CONTENT_URI: GET_PVV_CONTENT_URI
 
 appName: pvv-rr-m4d-adapter
+
+deployment:
+  container:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
 
 imagePullSecrets:
   - registrypullsecret
