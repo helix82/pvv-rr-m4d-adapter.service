@@ -50,7 +50,7 @@ secret:
 
 jvmOptions:
   xms: 256m
-  xmx: 512m
+  xmx: 4.2g
   gc: "-XX:+UseG1GC"
   minHeapFreeRatio: 10
   maxHeapFreeRatio: 30
@@ -79,11 +79,11 @@ appName: pvv-rr-m4d-adapter
 deployment:
   container:
     requests:
-      cpu: 150m
-      memory: 256Mi
+      cpu: 400m
+      memory: 1Gi
     limits:
-      cpu: 250m
-      memory: 512Mi
+      cpu: 1600m
+      memory: "4.2Gi"
 
 imagePullSecrets:
   - registrypullsecret

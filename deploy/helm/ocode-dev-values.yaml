@@ -85,7 +85,7 @@ appName: pvv-rr-m4d-adapter
 deployment:
   container:
     requests:
-      cpu: 150m
+      cpu: 100m
       memory: 256Mi
     limits:
       cpu: 250m
