@@ -50,7 +50,7 @@ secret:
 
 jvmOptions:
   xms: 256m
-  xmx: 4.2g
+  xmx: 3226m
   gc: "-XX:+UseG1GC"
   minHeapFreeRatio: 10
   maxHeapFreeRatio: 30
