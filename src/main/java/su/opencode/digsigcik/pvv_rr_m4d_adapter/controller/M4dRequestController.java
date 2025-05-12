@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -62,8 +63,28 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
-    @GetMapping("/receive/{guidXml}")
+    @GetMapping(value = "/receive/{guidXml}", produces = "application/zip")
     public ResponseEntity<?> getM4dRequestStatus(@PathVariable String guidXml) {
+        //TODO: @helix82 feature - получение статуса мчд в виде архива json-файла ответа и набора файлов xml и sig регистрации или отзыва мчд в РР МЧД
+//        try {
+//            M4dFnsDataResponse result = realApiService.getM4dRequestStatus(guidXml);
+//            if (result == null) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("МЧД не найдена");
+//            }
+//            ByteArrayResource resp = realApiService.createArchiveWithM4dRequestStatus(result);
+//            if (resp == null) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка создания архива");
+//            }
+//            String filename = "ON_EMCHD_" + result.getCreatedDateTime().substring(0,10) + "_" + result.getGuid() + ".zip";
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+//            return new ResponseEntity<>(resp, headers, HttpStatus.OK);
+//
+//        } catch (HttpClientErrorException | HttpServerErrorException e) {
+//            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+//        }
         try {
             M4dFnsDataResponse response = realApiService.getM4dRequestStatus(guidXml);
             if (response == null) {

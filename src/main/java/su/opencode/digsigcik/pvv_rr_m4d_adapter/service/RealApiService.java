@@ -1,7 +1,9 @@
 package su.opencode.digsigcik.pvv_rr_m4d_adapter.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -20,11 +22,13 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Service
@@ -44,7 +48,8 @@ public class RealApiService {
         return headers;
     }
 
-    public M4dResponseInfo createM4dRequest(File xmlFile, File sigFile) {
+    public M4dResponseInfo createM4dRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) {
+        //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
         authResponse = getBearerRequest();
         M4dResponseInfo responseInfo = null;
@@ -80,7 +85,8 @@ public class RealApiService {
         return responseInfo;
     }
 
-    public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile) {
+    public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) {
+        //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
         authResponse = getBearerRequest();
         M4dRevokeResponseInfo responseInfo = null;
@@ -211,7 +217,9 @@ public class RealApiService {
         }
 
         File xmlFile = null;
+        File xmlFileKvit = null;
         File sigFile = null;
+        File sigFileKvit = null;
         int xmlCount = 0;
         int sigCount = 0;
         // Распаковка ZIP-архива и сохранение всех файлов
@@ -233,14 +241,30 @@ public class RealApiService {
                             .toLowerCase()
                             .endsWith(".xml")) {
                         xmlCount++;
-                        xmlFile = outFile;
+                        if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("on_emchd")) {
+                            xmlFile = outFile;
+                        } else if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("квит003_фнс_on_emchd")) {
+                            xmlFileKvit = outFile;
+                        }
                     }
                     // Если расширение sig – увеличиваем счетчик и запоминаем файл
                     if (entry.getName()
                             .toLowerCase()
                             .endsWith(".sig")) {
                         sigCount++;
-                        sigFile = outFile;
+                        if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("on_emchd")) {
+                            sigFile = outFile;
+                        } else if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("квит003_фнс_on_emchd")) {
+                            sigFileKvit = outFile;
+                        }
                     }
                 }
             }
@@ -252,21 +276,21 @@ public class RealApiService {
         if (xmlCount == 0) {
             cleanupDirectory(tempDir);
             throw new RuntimeException("XML-файл не найден в ZIP архиве.");
-        } else if (xmlCount > 1) {
+        } else if (xmlCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более одного XML-файла.");
+            throw new RuntimeException("В архиве найдено более двух XML-файлов.");
         }
         if (sigCount == 0) {
             cleanupDirectory(tempDir);
             throw new RuntimeException("SIG-файл не найден в ZIP архиве.");
-        } else if (sigCount > 1) {
+        } else if (sigCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более одного SIG-файла.");
+            throw new RuntimeException("В архиве найдено более двух SIG-файлов.");
         }
 
         try {
             // Вызов API для создания запроса на регистрацию мчд в рр мчд
-            M4dResponseInfo response = createM4dRequest(xmlFile, sigFile);
+            M4dResponseInfo response = createM4dRequest(xmlFile, sigFile, xmlFileKvit, sigFileKvit);
             if (response == null) {
                 throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
             }
@@ -286,7 +310,9 @@ public class RealApiService {
         }
 
         File xmlFile = null;
+        File xmlFileKvit = null;
         File sigFile = null;
+        File sigFileKvit = null;
         int xmlCount = 0;
         int sigCount = 0;
         // Распаковка ZIP-архива и сохранение всех файлов
@@ -308,14 +334,30 @@ public class RealApiService {
                             .toLowerCase()
                             .endsWith(".xml")) {
                         xmlCount++;
-                        xmlFile = outFile;
+                        if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("on_offdover")) {
+                            xmlFile = outFile;
+                        } else if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("квит003_фнс_on_offdover")) {
+                            xmlFileKvit = outFile;
+                        }
                     }
                     // Если расширение sig – увеличиваем счетчик и запоминаем файл
                     if (entry.getName()
                             .toLowerCase()
                             .endsWith(".sig")) {
                         sigCount++;
-                        sigFile = outFile;
+                        if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("on_offdover")) {
+                            sigFile = outFile;
+                        } else if (entry.getName()
+                                .toLowerCase()
+                                .startsWith("квит003_фнс_on_offdover")) {
+                            sigFileKvit = outFile;
+                        }
                     }
                 }
             }
@@ -327,21 +369,21 @@ public class RealApiService {
         if (xmlCount == 0) {
             cleanupDirectory(tempDir);
             throw new RuntimeException("XML-файл не найден в ZIP архиве.");
-        } else if (xmlCount > 1) {
+        } else if (xmlCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более одного XML-файла.");
+            throw new RuntimeException("В архиве найдено более двух XML-файлов.");
         }
         if (sigCount == 0) {
             cleanupDirectory(tempDir);
             throw new RuntimeException("SIG-файл не найден в ZIP архиве.");
-        } else if (sigCount > 1) {
+        } else if (sigCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более одного SIG-файла.");
+            throw new RuntimeException("В архиве найдено более двух SIG-файлов.");
         }
 
         try {
             // Вызов API для создания запроса на регистрацию мчд в рр мчд
-            M4dRevokeResponseInfo response = createM4dRevokeRequest(xmlFile, sigFile);
+            M4dRevokeResponseInfo response = createM4dRevokeRequest(xmlFile, sigFile, xmlFileKvit, sigFileKvit);
             if (response == null) {
                 throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
             }
@@ -359,6 +401,53 @@ public class RealApiService {
                     .forEach(File::delete);
         } catch (IOException e) {
             log.warn("Ошибка очистки временной директории {}: {}", directory, e.getMessage());
+        }
+    }
+
+    public ByteArrayResource createArchiveWithM4dRequestStatus(M4dFnsDataResponse response, String... files) throws IOException {
+        String tempZipFile = "/tmp/ON_EMCHD_" + response.getCreatedDateTime().substring(0,10) + "_" + response.getGuid() + ".zip";
+        String tempFileResponse = "/tmp/status_ON_EMCHD_"+ response.getCreatedDateTime().substring(0,10) + "_" + response.getGuid() + ".json";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            // Сериализация объекта в JSON и запись в файл
+            objectMapper.writeValue(new File(tempFileResponse), response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String[] updatedFiles = Arrays.copyOf(files, files.length + 1);
+        updatedFiles[updatedFiles.length - 1] = tempFileResponse;
+
+        createZip(tempZipFile, updatedFiles);
+        File f = new File(tempFileResponse);
+        f.delete();
+        return new ByteArrayResource(Files.readAllBytes((new File(tempZipFile)).toPath()));
+    }
+
+    private static void createZip(String zipFilePath, String... files) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(zipFilePath);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+            for (String filePath : files) {
+                File file = new File(filePath);
+                if (!file.exists()) {
+                    System.err.println("Файл не найден: " + filePath);
+                    continue;
+                }
+
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    ZipEntry zipEntry = new ZipEntry(file.getName());
+                    zos.putNextEntry(zipEntry);
+
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = fis.read(buffer)) >= 0) {
+                        zos.write(buffer, 0, length);
+                    }
+
+                    zos.closeEntry();
+                }
+            }
         }
     }
 
