@@ -20,6 +20,8 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.PvvApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.RealApiService;
 
+import javax.servlet.http.HttpServletResponse;
+
 import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 
 @Slf4j
@@ -64,33 +66,25 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
     @GetMapping(value = "/receive/{guidXml}", produces = "application/zip")
-    public ResponseEntity<?> getM4dRequestStatus(@PathVariable String guidXml) {
-        //TODO: @helix82 feature - получение статуса мчд в виде архива json-файла ответа и набора файлов xml и sig регистрации или отзыва мчд в РР МЧД
-//        try {
-//            M4dFnsDataResponse result = realApiService.getM4dRequestStatus(guidXml);
-//            if (result == null) {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("МЧД не найдена");
-//            }
-//            ByteArrayResource resp = realApiService.createArchiveWithM4dRequestStatus(result);
-//            if (resp == null) {
-//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка создания архива");
-//            }
-//            String filename = "ON_EMCHD_" + result.getCreatedDateTime().substring(0,10) + "_" + result.getGuid() + ".zip";
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
-//            return new ResponseEntity<>(resp, headers, HttpStatus.OK);
-//
-//        } catch (HttpClientErrorException | HttpServerErrorException e) {
-//            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
-//        }
+    public ResponseEntity<?> getM4dRequestStatus(@PathVariable String guidXml, HttpServletResponse response) {
+        //TODO: @helix82 feature - получение статуса мчд в виде архива json-файла ответа и набора файлов xml и sig регистрации или отзыва мчд в РР МЧД (пока только json в архиве)
         try {
-            M4dFnsDataResponse response = realApiService.getM4dRequestStatus(guidXml);
-            if (response == null) {
+            M4dFnsDataResponse report = realApiService.getM4dRequestStatus(guidXml);
+            if (report == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("МЧД не найдена");
             }
-            return ResponseEntity.ok(response);
+            ByteArrayResource resource = realApiService.createArchiveWithM4dRequestStatus(report);
+
+            try {
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + guidXml + ".zip\"");
+
+                return new ResponseEntity<>(
+                        resource,
+                        HttpStatus.OK
+                );
+            } catch (Exception e) {
+                return ResponseEntity.noContent().build();
+            }
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
