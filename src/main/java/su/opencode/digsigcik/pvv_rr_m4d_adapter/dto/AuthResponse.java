@@ -13,4 +13,24 @@ import lombok.NoArgsConstructor;
 public class AuthResponse {
     @JsonProperty("access_token")
     private String accessToken;
+    @JsonProperty("error")
+    private Error error;
+
+    @Data
+    public static class Error {
+        @JsonProperty("detail")
+        private String detail; // текст ошибки
+        @JsonProperty("instance")
+        private String instance; // URL, идентифицирующий ошибку
+        @JsonProperty("meta")
+        private String meta; // Метаданные ошибки
+        @JsonProperty("status")
+        private Integer status; // HTTP статус
+        @JsonProperty("title")
+        private String title; // заголовок ошибки
+        @JsonProperty("type")
+        private String type; // код ошибки
+        @JsonProperty("dictionary_code")
+        private String dictionary_code; // Код ошибки в справочнике ERROR-кодов
+    }
 }

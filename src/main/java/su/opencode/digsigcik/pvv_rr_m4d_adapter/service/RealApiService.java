@@ -1,16 +1,17 @@
 package su.opencode.digsigcik.pvv_rr_m4d_adapter.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 import org.springframework.web.multipart.MultipartFile;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.AuthResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
@@ -18,7 +19,6 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
 
 import java.io.*;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,15 +29,22 @@ import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RealApiService {
     private final RestTemplate restTemplate;
+    ObjectMapper objectMapper = new ObjectMapper();
+    private final ModelMapper modelMapper;
 
-    @Value("${api.base-url}")
-    private String apiBaseUrl;
-
-    public RealApiService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
+    @Value("${rr-m4d.get-token.uri}")
+    private String GET_TOKEN_URI;
+    @Value("${rr-m4d.registry-m4d.uri}")
+    private String REGISTRY_M4D_URI;
+    @Value("${rr-m4d.registry-revoke.uri}")
+    private String REGISTRY_REVOKE_URI;
+    @Value("${rr-m4d.user-name}")
+    private String USER_NAME;
+    @Value("${rr-m4d.user-password}")
+    private String USER_PASSWORD;
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -45,135 +52,131 @@ public class RealApiService {
         return headers;
     }
 
-    public M4dResponseInfo createM4dRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) {
+    public M4dResponseInfo createM4dRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws JsonProcessingException {
         //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
+        M4dResponseInfo responseInfo = new M4dResponseInfo();
         authResponse = getBearerRequest();
-        M4dResponseInfo responseInfo = null;
+        if (authResponse.getAccessToken()==null) {
+            M4dResponseInfo.Error error = convertClassErrorToClassError(authResponse.getError(), M4dResponseInfo.Error.class);
+            responseInfo.setError(error);
+            return responseInfo;
+        }
+        HttpHeaders headers = createHeaders();
+        try {
+            headers.setAccept(Collections.singletonList(MediaType.ALL));
+            headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+            map.add("poa", new FileSystemResource(xmlFile));
+            map.add("signature", new FileSystemResource(sigFile));
+            HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
 
-        if (authResponse != null) {
-            HttpHeaders headers = createHeaders();
             try {
-                headers.setAccept(Collections.singletonList(MediaType.ALL));
-                headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
-                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-                LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-                map.add("poa", new FileSystemResource(xmlFile));
-                map.add("signature", new FileSystemResource(sigFile));
-                HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
-
-                try {
-                    ResponseEntity<M4dResponseInfo> response = restTemplate.exchange(
-                            apiBaseUrl + "/poar-webapp/integration/poa/",
-                            HttpMethod.POST,
-                            requestEntity,
-                            M4dResponseInfo.class
-                    );
-                    responseInfo = response.getBody();
-                } catch (HttpClientErrorException e) {
-                    throw new RuntimeException("Server Error: " + e.getResponseBodyAsString());
-                } catch (Exception e) {
-                    throw new RuntimeException("Error: " + e.getMessage());
-                }
+                ResponseEntity<M4dResponseInfo> response = restTemplate.exchange(
+                        REGISTRY_M4D_URI,
+                        HttpMethod.POST,
+                        requestEntity,
+                        M4dResponseInfo.class
+                );
+                responseInfo = response.getBody();
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                M4dResponseInfo.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dResponseInfo.Error.class);
+                responseInfo.setError(error);
+            } catch (RestClientResponseException e) {
+                System.out.println("Ответ сервера: " + e.getResponseBodyAsString());
             } catch (Exception e) {
                 throw new RuntimeException("Error: " + e.getMessage());
             }
+        } catch (Exception e) {
+            throw new RuntimeException("Error: " + e.getMessage());
         }
         return responseInfo;
     }
 
-    public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) {
+    public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws JsonProcessingException {
         //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
         authResponse = getBearerRequest();
-        M4dRevokeResponseInfo responseInfo = null;
+        M4dRevokeResponseInfo responseInfo = new M4dRevokeResponseInfo();
+        if (authResponse.getAccessToken()==null) {
+            M4dRevokeResponseInfo.Error error = convertClassErrorToClassError(authResponse.getError(), M4dRevokeResponseInfo.Error.class);
+            responseInfo.setError(error);
+            return responseInfo;
+        }
+        HttpHeaders headers = createHeaders();
+        try {
+            headers.setAccept(Collections.singletonList(MediaType.ALL));
+            headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+            map.add("poaRevoke", new FileSystemResource(xmlFile));
+            map.add("signature", new FileSystemResource(sigFile));
+            HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
 
-        if (authResponse != null) {
-            HttpHeaders headers = createHeaders();
             try {
-                headers.setAccept(Collections.singletonList(MediaType.ALL));
-                headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
-                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-                LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-                map.add("poaRevoke", new FileSystemResource(xmlFile));
-                map.add("signature", new FileSystemResource(sigFile));
-                HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
-
-                try {
-                    ResponseEntity<M4dRevokeResponseInfo> response = restTemplate.exchange(
-                            apiBaseUrl + "/poar-webapp/integration/poa/revoke",
-                            HttpMethod.POST,
-                            requestEntity,
-                            M4dRevokeResponseInfo.class
-                    );
-                    responseInfo = response.getBody();
-                } catch (HttpClientErrorException e) {
-                    throw new RuntimeException("Server Error: " + e.getResponseBodyAsString());
-                } catch (Exception e) {
-                    throw new RuntimeException("Error: " + e.getMessage());
-                }
+                ResponseEntity<M4dRevokeResponseInfo> response = restTemplate.exchange(
+                        REGISTRY_REVOKE_URI,
+                        HttpMethod.POST,
+                        requestEntity,
+                        M4dRevokeResponseInfo.class
+                );
+                responseInfo = response.getBody();
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                M4dRevokeResponseInfo.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dRevokeResponseInfo.Error.class);
+                responseInfo.setError(error);
             } catch (Exception e) {
                 throw new RuntimeException("Error: " + e.getMessage());
             }
+        } catch (Exception e) {
+            throw new RuntimeException("Error: " + e.getMessage());
         }
         return responseInfo;
     }
 
-    public M4dFnsDataResponse getM4dRequestStatus(String guidXml) {
-        M4dFnsDataResponse m4dFnsDataResponse = null;
+    public M4dFnsDataResponse getM4dRequestStatus(String guidXml) throws JsonProcessingException {
+        M4dFnsDataResponse m4dFnsDataResponse = new M4dFnsDataResponse();
         AuthResponse authResponse;
         authResponse = getBearerRequest();
+        if (authResponse.getAccessToken()==null) {
+            M4dFnsDataResponse.Error error = convertClassErrorToClassError(authResponse.getError(), M4dFnsDataResponse.Error.class);
+            m4dFnsDataResponse.setError(error);
+            return m4dFnsDataResponse;
+        }
+        HttpHeaders headers = createHeaders();
+        try {
+            headers.setAccept(Collections.singletonList(MediaType.ALL));
+            headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
 
-        if (authResponse != null) {
-            HttpHeaders headers = createHeaders();
             try {
-                headers.setAccept(Collections.singletonList(MediaType.ALL));
-                headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
-                HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-
-                try {
-                    ResponseEntity<M4dFnsDataResponse> response = restTemplate.exchange(
-                            apiBaseUrl + "/poar-webapp/integration/poa/" + guidXml + "/public",
-                            HttpMethod.GET,
-                            requestEntity,
-                            M4dFnsDataResponse.class
-                    );
-                    m4dFnsDataResponse = response.getBody();
-                } catch (HttpClientErrorException e) {
-                    if (e.getStatusCode().value() == 404) {
-                        System.out.println("Ресурс не найден (404): " + e.getResponseBodyAsString());
-                        System.out.println("МЧД с GUID=" + guidXml + " не найдена на РР МЧД ФНС");
-                    } else {
-                        System.out.println("Ошибка: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-                    }
-                } catch (ResourceAccessException e) {
-                    System.out.println("Ошибка доступа к ресурсу: " + e.getMessage());
-                    if (e.getCause() instanceof UnknownHostException) {
-                        System.out.println("Неизвестный хост: " + e.getCause().getMessage());
-                        System.out.println("Сервис РР МЧД ФНС недоступен");
-                    }
-                } catch (Exception e) {
-                    System.out.println("Произошла ошибка: " + e.getMessage());
-                }
-            } catch (HttpClientErrorException e) {
-                throw new RuntimeException("Server Error: " + e.getResponseBodyAsString());
+                ResponseEntity<M4dFnsDataResponse> response = restTemplate.exchange(
+                        REGISTRY_M4D_URI + "/" + guidXml + "/public",
+                        HttpMethod.GET,
+                        requestEntity,
+                        M4dFnsDataResponse.class
+                );
+                m4dFnsDataResponse = response.getBody();
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                M4dFnsDataResponse.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dFnsDataResponse.Error.class);
+                m4dFnsDataResponse.setError(error);
             } catch (Exception e) {
                 throw new RuntimeException("Error: " + e.getMessage());
             }
-        } else throw new RuntimeException("Ошибка авторизации");
-        if (m4dFnsDataResponse == null) {
-            System.out.println("Ошибка получения данных по МЧД с сайта РР МЧД ФНС");
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("Server Error: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error: " + e.getMessage());
         }
         return m4dFnsDataResponse;
     }
 
-    private AuthResponse getBearerRequest() {
+    private AuthResponse getBearerRequest() throws JsonProcessingException {
+        AuthResponse authResponse = new AuthResponse();
         HttpHeaders headers = createHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.ALL));
-        String username = "demo-client";
-        String password = "secret";
-        String auth = username + ":" + password;
+        String auth = USER_NAME + ":" + USER_PASSWORD;
         byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
         String authHeader = "Basic " + new String(encodedAuth);
         headers.set("Authorization", authHeader);
@@ -181,27 +184,19 @@ public class RealApiService {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
         try {
             ResponseEntity<AuthResponse> response = restTemplate.exchange(
-                    apiBaseUrl + "/vst-oauth2/oauth/token",
+                    GET_TOKEN_URI,
                     HttpMethod.POST,
                     requestEntity,
                     AuthResponse.class
             );
-            return response.getBody();
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode().value() == 404) {
-                log.error("Ресурс не найден (404): " + e.getResponseBodyAsString());
-            } else {
-                log.error("Ошибка: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-            }
-        } catch (ResourceAccessException e) {
-            log.error("Ошибка доступа к ресурсу: " + e.getMessage());
-            if (e.getCause() instanceof UnknownHostException) {
-                System.out.println("Неизвестный хост: " + e.getCause().getMessage());
-            }
+            authResponse = response.getBody();
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            AuthResponse.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), AuthResponse.Error.class);
+            authResponse.setError(error);
         } catch (Exception e) {
-            System.out.println("Произошла ошибка: " + e.getMessage());
+            throw new RuntimeException("Error: " + e.getMessage());
         }
-        return null;
+        return authResponse;
     }
 
     public M4dResponseInfo processM4dZip(MultipartFile zipFile) {
@@ -292,6 +287,8 @@ public class RealApiService {
                 throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
             }
             return response;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         } finally {
             cleanupDirectory(tempDir);
         }
@@ -385,6 +382,8 @@ public class RealApiService {
                 throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
             }
             return response;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         } finally {
             cleanupDirectory(tempDir);
         }
@@ -401,9 +400,10 @@ public class RealApiService {
         }
     }
 
-    public ByteArrayResource createArchiveWithM4dRequestStatus(M4dFnsDataResponse response, String... files) throws IOException {
-        String tempZipFile = "/tmp/ON_EMCHD_" + response.getCreatedDateTime().substring(0,10) + "_" + response.getGuid() + ".zip";
-        String tempFileResponse = "/tmp/status_ON_EMCHD_"+ response.getCreatedDateTime().substring(0,10) + "_" + response.getGuid() + ".json";
+    public ByteArrayResource createArchiveWithM4dRequestStatus(String guidXml, M4dFnsDataResponse response, List<String> files) throws IOException {
+        String tempZipFile = "/tmp/ON_EMCHD_" + guidXml + ".zip";
+        String tempFileResponse = "/tmp/status_ON_EMCHD_" + guidXml + ".json";
+        List<String> filesList = new ArrayList<>();
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -412,16 +412,17 @@ public class RealApiService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String[] updatedFiles = Arrays.copyOf(files, files.length + 1);
-        updatedFiles[updatedFiles.length - 1] = tempFileResponse;
-
-        createZip(tempZipFile, updatedFiles);
+        filesList.add(tempFileResponse);
+        if (!files.isEmpty()) {
+            filesList.addAll(files);
+        }
+        createZip(tempZipFile, filesList);
         File f = new File(tempFileResponse);
         f.delete();
         return new ByteArrayResource(Files.readAllBytes((new File(tempZipFile)).toPath()));
     }
 
-    private static void createZip(String zipFilePath, String... files) throws IOException {
+    private static void createZip(String zipFilePath, List<String> files) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(zipFilePath);
              ZipOutputStream zos = new ZipOutputStream(fos)) {
 
@@ -446,6 +447,14 @@ public class RealApiService {
                 }
             }
         }
+    }
+
+    private <T> T convertStringErrorToClassError(String error, Class<T> clazz) throws JsonProcessingException {
+        return objectMapper.readValue(error, clazz);
+    }
+
+    private  <D> D convertClassErrorToClassError(AuthResponse.Error authError, Class<D> destinationClass) {
+        return modelMapper.map(authError, destinationClass);
     }
 
 }
