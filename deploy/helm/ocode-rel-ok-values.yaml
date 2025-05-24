@@ -52,6 +52,16 @@ secret:
     RESOURCE_ACCESS: c2Vw
     # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/inbox/
     GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9pbmJveC8K
+    #https://operator.cprr-it.weintegrator.com/api/v0/vst-oauth2/oauth/token
+    GET_TOKEN_URI: aHR0cHM6Ly9vcGVyYXRvci5jcHJyLWl0LndlaW50ZWdyYXRvci5jb20vYXBpL3YwL3ZzdC1vYXV0aDIvb2F1dGgvdG9rZW4=
+    #https://operator.cprr-it.weintegrator.com/api/v0/poar-webapp/integration/poa
+    REGISTRY_M4D_URI: aHR0cHM6Ly9vcGVyYXRvci5jcHJyLWl0LndlaW50ZWdyYXRvci5jb20vYXBpL3YwL3BvYXItd2ViYXBwL2ludGVncmF0aW9uL3BvYQ==
+    #https://operator.cprr-it.weintegrator.com/api/v0/poar-webapp/integration/poa/revoke
+    REGISTRY_REVOKE_URI: aHR0cHM6Ly9vcGVyYXRvci5jcHJyLWl0LndlaW50ZWdyYXRvci5jb20vYXBpL3YwL3BvYXItd2ViYXBwL2ludGVncmF0aW9uL3BvYS9yZXZva2U=
+    #demo-client
+    USER_NAME: ZGVtby1jbGllbnQ=
+    #secret
+    USER_PASSWORD: c2VjcmV0
 
 jvmOptions:
   xms: 256m

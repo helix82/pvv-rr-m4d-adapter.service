@@ -17,10 +17,14 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.annotation.PvvRrM4dExceptionHandler;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.MockApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.PvvApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.RealApiService;
 
 import javax.servlet.http.HttpServletResponse;
+
+import java.util.List;
+import java.util.Objects;
 
 import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 
@@ -33,10 +37,12 @@ import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 public class M4dRequestController {
 
     private final RealApiService realApiService;
+    private final MockApiService mockApiService;
     private final PvvApiService pvvApiService;
 
-    public M4dRequestController(RealApiService realApiService, PvvApiService pvvApiService) {
+    public M4dRequestController(RealApiService realApiService, MockApiService mockApiService, PvvApiService pvvApiService) {
         this.realApiService = realApiService;
+        this.mockApiService = mockApiService;
         this.pvvApiService = pvvApiService;
     }
 
@@ -49,6 +55,10 @@ public class M4dRequestController {
     })
     @PostMapping(value ="/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> uploadM4dZip(@RequestParam("file") MultipartFile zipFile) {
+        String fileName = zipFile.getOriginalFilename();
+        if (fileName != null && !fileName.toLowerCase().endsWith(".zip")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Переданный файл не является архивом.");
+        }
         try {
             return ResponseEntity.ok(realApiService.processM4dZip(zipFile));
         } catch (HttpClientErrorException | HttpServerErrorException e) {
@@ -67,14 +77,18 @@ public class M4dRequestController {
     })
     @GetMapping(value = "/receive/{guidXml}", produces = "application/zip")
     public ResponseEntity<?> getM4dRequestStatus(@PathVariable String guidXml, HttpServletResponse response) {
+        List<String> files = List.of();
         //TODO: @helix82 feature - получение статуса мчд в виде архива json-файла ответа и набора файлов xml и sig регистрации или отзыва мчд в РР МЧД (пока только json в архиве)
         try {
             M4dFnsDataResponse report = realApiService.getM4dRequestStatus(guidXml);
-            if (report == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("МЧД не найдена");
+            if (report.getError() == null) {
+                files = mockApiService.createAndSignedM4dConfirm(report); //файлы подтверждения регистрации мчд в рр мчд
+                if (Objects.equals(report.getStatus(), "REVOKED")) {
+                    List<String> filesRevoke = mockApiService.createAndSignedM4dRevokeConfirm(report); //файлы подтверждения регистрации заявления на отзыв мчд в рр мчд
+                    files.addAll(filesRevoke);
+                }
             }
-            ByteArrayResource resource = realApiService.createArchiveWithM4dRequestStatus(report);
-
+            ByteArrayResource resource = realApiService.createArchiveWithM4dRequestStatus(guidXml, report, files);
             try {
                 response.setHeader("Content-Disposition", "attachment; filename=\"" + guidXml + ".zip\"");
 
@@ -101,6 +115,10 @@ public class M4dRequestController {
     })
     @PostMapping(value ="/revoke/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> uploadM4dRevokeZip(@RequestParam("file") MultipartFile zipFile) {
+        String fileName = zipFile.getOriginalFilename();
+        if (fileName != null && !fileName.toLowerCase().endsWith(".zip")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Переданный файл не является архивом.");
+        }
         try {
             return ResponseEntity.ok(realApiService.processM4dRevokeZip(zipFile));
         } catch (HttpClientErrorException | HttpServerErrorException e) {

@@ -12,9 +12,16 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-api:
-  base-url: https://operator.cprr-it.weintegrator.com/api/v0
+rr-m4d:
+  get-token:
+    uri: ${GET_TOKEN_URI:https://operator.cprr-it.weintegrator.com/api/v0/vst-oauth2/oauth/token}
+  registry-m4d:
+    uri: ${REGISTRY_M4D_URI:https://operator.cprr-it.weintegrator.com/api/v0/poar-webapp/integration/poa}
+  registry-revoke:
+    uri: ${REGISTRY_REVOKE_URI:https://operator.cprr-it.weintegrator.com/api/v0/poar-webapp/integration/poa/revoke}
   user-id: some_user_id
+  user-name: ${USER_NAME:demo-client}
+  user-password: ${USER_PASSWORD:secret}
 
 pvv:
   get-message-content: ${GET_PVV_CONTENT_URI:http://localhost:8078/api/v1/inbox/}
