@@ -57,6 +57,7 @@ secret:
     USER_NAME: ZGVtby1jbGllbnQ=
     #secret
     USER_PASSWORD: c2VjcmV0
+    M4D_SOUL: Ig==
 
 jvmOptions:
   xms: 256m
@@ -88,6 +89,7 @@ env:
   REGISTRY_REVOKE_URI: REGISTRY_REVOKE_URI
   USER_NAME: USER_NAME
   USER_PASSWORD: USER_PASSWORD
+  M4D_SOUL: M4D_SOUL
 
 appName: pvv-rr-m4d-adapter
 

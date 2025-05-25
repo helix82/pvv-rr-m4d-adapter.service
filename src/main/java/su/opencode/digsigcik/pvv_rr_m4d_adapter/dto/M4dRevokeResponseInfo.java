@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class M4dRevokeResponseInfo {
+    @JsonProperty("poaNumber")
+    private String poaNumber; // guid доверенности
     @JsonProperty("txId")
     private String txId; // номер транзакции
     @JsonProperty("type")
@@ -29,24 +31,4 @@ public class M4dRevokeResponseInfo {
     private String dictionary_code; // Код ошибки в справочнике ERROR-кодов
     @JsonProperty("meta")
     private String meta; // Метаданные ошибки
-    @JsonProperty("error")
-    private Error error;
-
-    @Data
-    public static class Error {
-        @JsonProperty("detail")
-        private String detail; // текст ошибки
-        @JsonProperty("instance")
-        private String instance; // URL, идентифицирующий ошибку
-        @JsonProperty("meta")
-        private String meta; // Метаданные ошибки
-        @JsonProperty("status")
-        private Integer status; // HTTP статус
-        @JsonProperty("title")
-        private String title; // заголовок ошибки
-        @JsonProperty("type")
-        private String type; // код ошибки
-        @JsonProperty("dictionary_code")
-        private String dictionary_code; // Код ошибки в справочнике ERROR-кодов
-    }
 }

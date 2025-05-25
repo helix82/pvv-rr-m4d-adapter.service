@@ -22,6 +22,7 @@ rr-m4d:
   user-id: some_user_id
   user-name: ${USER_NAME:demo-client}
   user-password: ${USER_PASSWORD:secret}
+  soul: ${M4D_SOUL:"}
 
 pvv:
   get-message-content: ${GET_PVV_CONTENT_URI:http://localhost:8078/api/v1/inbox/}

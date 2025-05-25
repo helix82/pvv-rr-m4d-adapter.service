@@ -13,16 +13,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.AuthResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.HashUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -45,6 +51,8 @@ public class RealApiService {
     private String USER_NAME;
     @Value("${rr-m4d.user-password}")
     private String USER_PASSWORD;
+    @Value("${rr-m4d.soul}")
+    private String M4D_SOUL;
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -52,10 +60,12 @@ public class RealApiService {
         return headers;
     }
 
-    public M4dResponseInfo createM4dRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws JsonProcessingException {
+    public M4dResponseInfo createM4dRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws IOException, NoSuchAlgorithmException {
         //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
         M4dResponseInfo responseInfo = new M4dResponseInfo();
+        responseInfo.setPoaNumber(getGuidFromXml(xmlFile));
+        responseInfo.setPoaId(HashUtils.getHash(Files.readAllBytes(Paths.get(xmlFile.getPath())), M4D_SOUL));
         authResponse = getBearerRequest();
         if (authResponse.getAccessToken()==null) {
             M4dResponseInfo.Error error = convertClassErrorToClassError(authResponse.getError(), M4dResponseInfo.Error.class);
@@ -94,14 +104,20 @@ public class RealApiService {
         return responseInfo;
     }
 
-    public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws JsonProcessingException {
+    public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws IOException, NoSuchAlgorithmException {
         //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
         authResponse = getBearerRequest();
         M4dRevokeResponseInfo responseInfo = new M4dRevokeResponseInfo();
+        responseInfo.setPoaNumber(getGuidFromXml(xmlFile));
         if (authResponse.getAccessToken()==null) {
-            M4dRevokeResponseInfo.Error error = convertClassErrorToClassError(authResponse.getError(), M4dRevokeResponseInfo.Error.class);
-            responseInfo.setError(error);
+            responseInfo.setType(authResponse.getError().getType());
+            responseInfo.setTitle(authResponse.getError().getTitle());
+            responseInfo.setStatus(authResponse.getError().getStatus());
+            responseInfo.setDetail(authResponse.getError().getDetail());
+            responseInfo.setInstance(authResponse.getError().getInstance());
+            responseInfo.setDictionary_code(authResponse.getError().getDictionary_code());
+            responseInfo.setMeta(authResponse.getError().getMeta());
             return responseInfo;
         }
         HttpHeaders headers = createHeaders();
@@ -123,8 +139,14 @@ public class RealApiService {
                 );
                 responseInfo = response.getBody();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
-                M4dRevokeResponseInfo.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dRevokeResponseInfo.Error.class);
-                responseInfo.setError(error);
+                M4dRevokeResponseInfo error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dRevokeResponseInfo.class);
+                responseInfo.setType(error.getType());
+                responseInfo.setTitle(error.getTitle());
+                responseInfo.setStatus(error.getStatus());
+                responseInfo.setDetail(error.getDetail());
+                responseInfo.setInstance(error.getInstance());
+                responseInfo.setDictionary_code(error.getDictionary_code());
+                responseInfo.setMeta(error.getMeta());
             } catch (Exception e) {
                 throw new RuntimeException("Error: " + e.getMessage());
             }
@@ -136,6 +158,7 @@ public class RealApiService {
 
     public M4dFnsDataResponse getM4dRequestStatus(String guidXml) throws JsonProcessingException {
         M4dFnsDataResponse m4dFnsDataResponse = new M4dFnsDataResponse();
+        m4dFnsDataResponse.setGuid(guidXml);
         AuthResponse authResponse;
         authResponse = getBearerRequest();
         if (authResponse.getAccessToken()==null) {
@@ -287,7 +310,7 @@ public class RealApiService {
                 throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
             }
             return response;
-        } catch (JsonProcessingException e) {
+        } catch (IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         } finally {
             cleanupDirectory(tempDir);
@@ -374,7 +397,6 @@ public class RealApiService {
             cleanupDirectory(tempDir);
             throw new RuntimeException("В архиве найдено более двух SIG-файлов.");
         }
-
         try {
             // Вызов API для создания запроса на регистрацию мчд в рр мчд
             M4dRevokeResponseInfo response = createM4dRevokeRequest(xmlFile, sigFile, xmlFileKvit, sigFileKvit);
@@ -382,7 +404,7 @@ public class RealApiService {
                 throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
             }
             return response;
-        } catch (JsonProcessingException e) {
+        } catch (IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         } finally {
             cleanupDirectory(tempDir);
@@ -447,6 +469,30 @@ public class RealApiService {
                 }
             }
         }
+    }
+
+    public String getGuidFromXml(File file) {
+        String guid = null;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("НомДовер=")) {
+                    String key = " НомДовер=\"";
+                    int startIndex = line.indexOf(key);
+                    if (startIndex != -1) {
+                        startIndex += key.length();
+                        int endIndex = line.indexOf("\"", startIndex);
+                        if (endIndex != -1) {
+                            guid = line.substring(startIndex, endIndex);
+                        }
+                    }
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return guid;
     }
 
     private <T> T convertStringErrorToClassError(String error, Class<T> clazz) throws JsonProcessingException {

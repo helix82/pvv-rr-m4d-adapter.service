@@ -129,6 +129,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
                   key: {{ .Values.env.USER_PASSWORD }}
+            - name: M4D_SOUL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.M4D_SOUL }}
       imagePullSecrets:
         {{- range .Values.imagePullSecrets }}
         - name: {{ . }}
