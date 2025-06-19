@@ -57,6 +57,16 @@ secret:
     #secret
     USER_PASSWORD: c2VjcmV0
     M4D_SOUL: Ig==
+    # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/manual/inbox/
+    FNS_RECEIVE_RESPONSE_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL21hbnVhbC9pbmJveC8=
+    # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/manual/inbox/json/
+    FNS_RECEIVE_JSON_RESPONSE_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL21hbnVhbC9pbmJveC9qc29uLw===
+    # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/manual/rrm4d/send-registration-request-json
+    FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL21hbnVhbC9ycm00ZC9zZW5kLXJlZ2lzdHJhdGlvbi1yZXF1ZXN0LWpzb24=
+    # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/manual/rrm4d/send-status-request-file
+    FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL21hbnVhbC9ycm00ZC9zZW5kLXN0YXR1cy1yZXF1ZXN0LWZpbGU=
+    # http://pvv-adapter-service.master.svc.cluster.local:8078/api/v1/manual/rrm4d/send-revocation-request-json
+    FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UubWFzdGVyLnN2Yy5jbHVzdGVyLmxvY2FsOjgwNzgvYXBpL3YxL21hbnVhbC9ycm00ZC9zZW5kLXJldm9jYXRpb24tcmVxdWVzdC1qc29u==
 
 
 jvmOptions:
@@ -90,6 +100,11 @@ env:
   USER_NAME: USER_NAME
   USER_PASSWORD: USER_PASSWORD
   M4D_SOUL: M4D_SOUL
+  FNS_RECEIVE_RESPONSE_M4D_URI: FNS_RECEIVE_RESPONSE_M4D_URI
+  FNS_RECEIVE_JSON_RESPONSE_M4D_URI: FNS_RECEIVE_JSON_RESPONSE_M4D_URI
+  FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI: FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI
+  FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI: FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI
+  FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI
 
 appName: pvv-rr-m4d-adapter
 

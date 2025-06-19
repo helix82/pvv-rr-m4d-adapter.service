@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
@@ -13,11 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.Document;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.AuthResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.HashUtils;
 
 import java.io.*;
@@ -27,19 +26,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RealApiService {
     private final RestTemplate restTemplate;
-    ObjectMapper objectMapper = new ObjectMapper();
-    private final ModelMapper modelMapper;
 
     @Value("${rr-m4d.get-token.uri}")
     private String GET_TOKEN_URI;
@@ -68,7 +66,7 @@ public class RealApiService {
         responseInfo.setPoaId(HashUtils.getHash(Files.readAllBytes(Paths.get(xmlFile.getPath())), M4D_SOUL));
         authResponse = getBearerRequest();
         if (authResponse.getAccessToken()==null) {
-            M4dResponseInfo.Error error = convertClassErrorToClassError(authResponse.getError(), M4dResponseInfo.Error.class);
+            M4dResponseInfo.Error error = ConvertUtils.convertClassErrorToClassError(authResponse.getError(), M4dResponseInfo.Error.class);
             responseInfo.setError(error);
             return responseInfo;
         }
@@ -91,10 +89,10 @@ public class RealApiService {
                 );
                 responseInfo = response.getBody();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
-                M4dResponseInfo.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dResponseInfo.Error.class);
+                M4dResponseInfo.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), M4dResponseInfo.Error.class);
                 responseInfo.setError(error);
             } catch (RestClientResponseException e) {
-                System.out.println("Ответ сервера: " + e.getResponseBodyAsString());
+                System.out.println("Server response: " + e.getResponseBodyAsString());
             } catch (Exception e) {
                 throw new RuntimeException("Error: " + e.getMessage());
             }
@@ -139,7 +137,7 @@ public class RealApiService {
                 );
                 responseInfo = response.getBody();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
-                M4dRevokeResponseInfo error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dRevokeResponseInfo.class);
+                M4dRevokeResponseInfo error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), M4dRevokeResponseInfo.class);
                 responseInfo.setType(error.getType());
                 responseInfo.setTitle(error.getTitle());
                 responseInfo.setStatus(error.getStatus());
@@ -162,7 +160,7 @@ public class RealApiService {
         AuthResponse authResponse;
         authResponse = getBearerRequest();
         if (authResponse.getAccessToken()==null) {
-            M4dFnsDataResponse.Error error = convertClassErrorToClassError(authResponse.getError(), M4dFnsDataResponse.Error.class);
+            M4dFnsDataResponse.Error error = ConvertUtils.convertClassErrorToClassError(authResponse.getError(), M4dFnsDataResponse.Error.class);
             m4dFnsDataResponse.setError(error);
             return m4dFnsDataResponse;
         }
@@ -181,7 +179,7 @@ public class RealApiService {
                 );
                 m4dFnsDataResponse = response.getBody();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
-                M4dFnsDataResponse.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), M4dFnsDataResponse.Error.class);
+                M4dFnsDataResponse.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), M4dFnsDataResponse.Error.class);
                 m4dFnsDataResponse.setError(error);
             } catch (Exception e) {
                 throw new RuntimeException("Error: " + e.getMessage());
@@ -214,7 +212,7 @@ public class RealApiService {
             );
             authResponse = response.getBody();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            AuthResponse.Error error = convertStringErrorToClassError(e.getResponseBodyAsString(), AuthResponse.Error.class);
+            AuthResponse.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), AuthResponse.Error.class);
             authResponse.setError(error);
         } catch (Exception e) {
             throw new RuntimeException("Error: " + e.getMessage());
@@ -228,7 +226,7 @@ public class RealApiService {
         try {
             tempDir = Files.createTempDirectory("mchdZip");
         } catch (IOException e) {
-            throw new RuntimeException("Не удалось создать временную директорию", e);
+            throw new RuntimeException(CREATE_TEMP_FOLDER_ERROR, e);
         }
 
         File xmlFile = null;
@@ -285,29 +283,29 @@ public class RealApiService {
             }
         } catch (IOException e) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("Ошибка распаковки ZIP файла: " + e.getMessage(), e);
+            throw new RuntimeException(ZIP_UNPACK_ERROR + ": " + e.getMessage(), e);
         }
 
         if (xmlCount == 0) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("XML-файл не найден в ZIP архиве.");
+            throw new RuntimeException(ZIP_XML_NOT_FOUND);
         } else if (xmlCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более двух XML-файлов.");
+            throw new RuntimeException(ZIP_XML_MORE_TWO);
         }
         if (sigCount == 0) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("SIG-файл не найден в ZIP архиве.");
+            throw new RuntimeException(ZIP_SIG_NOT_FOUND);
         } else if (sigCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более двух SIG-файлов.");
+            throw new RuntimeException(ZIP_SIG_MORE_TWO);
         }
 
         try {
             // Вызов API для создания запроса на регистрацию мчд в рр мчд
             M4dResponseInfo response = createM4dRequest(xmlFile, sigFile, xmlFileKvit, sigFileKvit);
             if (response == null) {
-                throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
+                throw new RuntimeException(M4D_REGISTRATION_ERROR);
             }
             return response;
         } catch (IOException | NoSuchAlgorithmException e) {
@@ -323,7 +321,7 @@ public class RealApiService {
         try {
             tempDir = Files.createTempDirectory("mchdRevokeZip");
         } catch (IOException e) {
-            throw new RuntimeException("Не удалось создать временную директорию", e);
+            throw new RuntimeException(CREATE_TEMP_FOLDER_ERROR, e);
         }
 
         File xmlFile = null;
@@ -380,28 +378,28 @@ public class RealApiService {
             }
         } catch (IOException e) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("Ошибка распаковки ZIP файла: " + e.getMessage(), e);
+            throw new RuntimeException(ZIP_UNPACK_ERROR + ": " + e.getMessage(), e);
         }
 
         if (xmlCount == 0) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("XML-файл не найден в ZIP архиве.");
+            throw new RuntimeException(ZIP_XML_NOT_FOUND);
         } else if (xmlCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более двух XML-файлов.");
+            throw new RuntimeException(ZIP_XML_MORE_TWO);
         }
         if (sigCount == 0) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("SIG-файл не найден в ZIP архиве.");
+            throw new RuntimeException(ZIP_SIG_NOT_FOUND);
         } else if (sigCount > 2) {
             cleanupDirectory(tempDir);
-            throw new RuntimeException("В архиве найдено более двух SIG-файлов.");
+            throw new RuntimeException(ZIP_SIG_MORE_TWO);
         }
         try {
             // Вызов API для создания запроса на регистрацию мчд в рр мчд
             M4dRevokeResponseInfo response = createM4dRevokeRequest(xmlFile, sigFile, xmlFileKvit, sigFileKvit);
             if (response == null) {
-                throw new RuntimeException("Ошибка регистрации МЧД в РР МЧД.");
+                throw new RuntimeException(M4D_REVOKE_REGISTRATION_ERROR);
             }
             return response;
         } catch (IOException | NoSuchAlgorithmException e) {
@@ -418,7 +416,7 @@ public class RealApiService {
                     .map(Path::toFile)
                     .forEach(File::delete);
         } catch (IOException e) {
-            log.warn("Ошибка очистки временной директории {}: {}", directory, e.getMessage());
+            log.warn(CLEAR_TEMP_FOLDER_ERROR + " {}: {}", directory, e.getMessage());
         }
     }
 
@@ -444,6 +442,28 @@ public class RealApiService {
         return new ByteArrayResource(Files.readAllBytes((new File(tempZipFile)).toPath()));
     }
 
+    public File createArchiveWithM4dRequestStatusToFile(String guidXml, M4dFnsDataResponse response, List<String> files) throws IOException {
+        String tempZipFile = "/tmp/ON_EMCHD_" + guidXml + ".zip";
+        String tempFileResponse = "/tmp/status_ON_EMCHD_" + guidXml + ".json";
+        List<String> filesList = new ArrayList<>();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            // Сериализация объекта в JSON и запись в файл
+            objectMapper.writeValue(new File(tempFileResponse), response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        filesList.add(tempFileResponse);
+        if (!files.isEmpty()) {
+            filesList.addAll(files);
+        }
+        createZip(tempZipFile, filesList);
+        File f = new File(tempFileResponse);
+        f.delete();
+        return new File(tempZipFile);
+    }
+
     private static void createZip(String zipFilePath, List<String> files) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(zipFilePath);
              ZipOutputStream zos = new ZipOutputStream(fos)) {
@@ -451,7 +471,7 @@ public class RealApiService {
             for (String filePath : files) {
                 File file = new File(filePath);
                 if (!file.exists()) {
-                    System.err.println("Файл не найден: " + filePath);
+                    System.err.println(FILE_NOT_FOUND + ": " + filePath);
                     continue;
                 }
 
@@ -495,12 +515,12 @@ public class RealApiService {
         return guid;
     }
 
-    private <T> T convertStringErrorToClassError(String error, Class<T> clazz) throws JsonProcessingException {
-        return objectMapper.readValue(error, clazz);
-    }
-
-    private  <D> D convertClassErrorToClassError(AuthResponse.Error authError, Class<D> destinationClass) {
-        return modelMapper.map(authError, destinationClass);
+    public boolean isZipFile(File file) {
+        try (ZipFile zipFile = new ZipFile(file)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
 }
