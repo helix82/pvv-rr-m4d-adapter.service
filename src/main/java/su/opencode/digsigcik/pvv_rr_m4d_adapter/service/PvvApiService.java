@@ -1,14 +1,17 @@
 package su.opencode.digsigcik.pvv_rr_m4d_adapter.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,6 +23,16 @@ public class PvvApiService {
 
     @Value("${pvv.get-message-content}")
     private URI PVV_GET_CONTENT_URI;
+    @Value("${pvv.fns-receive-response-m4d}")
+    private URI FNS_RECEIVE_RESPONSE_M4D_URI;
+    @Value("${pvv.fns-receive-json-response-m4d}")
+    private URI FNS_RECEIVE_JSON_RESPONSE_M4D_URI;
+    @Value("${pvv.fns-send-response-registration-request-m4d}")
+    private URI FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI;
+    @Value("${pvv.fns-send-response-status-request-m4d}")
+    private URI FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI;
+    @Value("${pvv.fns-send-response-revoke-request-m4d}")
+    private URI FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI;
 
     public PvvApiService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -35,5 +48,148 @@ public class PvvApiService {
         );
         var body = response.getBody();
         return body;
+    }
+
+    public ByteArrayResource receiveResponseM4dToRR(String messageId) {
+        ByteArrayResource res = receiveResponseFnsViaPvv(messageId, FNS_RECEIVE_RESPONSE_M4D_URI);
+        log.info(messageId);
+        log.info(String.valueOf(res));
+        return res;
+    }
+
+    public String receiveJsonResponseM4dToRR(String messageId) {
+        String res = receiveJsonResponseFnsViaPvv(messageId, FNS_RECEIVE_JSON_RESPONSE_M4D_URI);
+        log.info(messageId);
+        log.info(res);
+        return res;
+    }
+
+    private ByteArrayResource receiveResponseFnsViaPvv(String messageId, URI uri) {
+        try {
+            log.debug("Получение ответа {}...", messageId);
+            return restTemplate.getForEntity(
+                            uri+messageId,
+                            ByteArrayResource.class
+                    )
+                    .getBody();
+        } catch (Exception ex) {
+            log.error("Ошибка при получении ответа для межконтурного обновления: {} по адресу '{}'", ex.getMessage(),
+                    uri);
+        }
+        return null;
+    }
+
+    private String receiveJsonResponseFnsViaPvv(String messageId, URI uri) {
+        try {
+            log.debug("Получение json-ответа {}...", messageId);
+            return restTemplate.getForEntity(
+                            uri+messageId,
+                            String.class
+                    )
+                    .getBody();
+        } catch (Exception ex) {
+            log.error("Ошибка при получении json-ответа для межконтурного обновления: {} по адресу '{}'", ex.getMessage(),
+                    uri);
+        }
+        return null;
+    }
+
+    public String sendResponseRegisterM4dFromRR(M4dResponseInfo response) {
+        String res = sendJsonResponseM4dViaPvv(response, FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI);
+        log.info(String.valueOf(response));
+        log.info(res);
+        return res;
+    }
+
+    public String sendResponseRevokeM4dFromRR(M4dRevokeResponseInfo response) {
+        String res = sendJsonResponseM4dRevokeViaPvv(response, FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI);
+        log.info(String.valueOf(response));
+        log.info(res);
+        return res;
+    }
+
+    public String sendResponseStatusM4dFromRR(MultipartFile file) {
+        String res = sendFileResponseM4dViaPvv(file, FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI);
+        log.info(String.valueOf(file));
+        log.info(res);
+        return res;
+    }
+
+    private String sendJsonResponseM4dViaPvv(M4dResponseInfo response, URI uri) {
+        try {
+            log.debug("Отправка json-ответа {}...", response);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/json");
+            headers.setContentType(MediaType.APPLICATION_JSON); // если тело JSON
+
+            HttpEntity<String> entity = new HttpEntity<>(convertM4dResponseInfoToString(response), headers);
+            return restTemplate.postForEntity(
+                            uri,
+                            entity,
+                            String.class
+                    )
+                    .getBody();
+        } catch (Exception ex) {
+            log.error("Ошибка при отправке json-ответа для межконтурного обновления: {} по адресу '{}'", ex.getMessage(),
+                    uri);
+        }
+        return null;
+    }
+
+    private String sendJsonResponseM4dRevokeViaPvv(M4dRevokeResponseInfo response, URI uri) {
+        try {
+            log.debug("Отправка json-ответа {}...", response);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/json");
+            headers.setContentType(MediaType.APPLICATION_JSON); // если тело JSON
+
+            HttpEntity<String> entity = new HttpEntity<>(convertM4dRevokeResponseInfoToString(response), headers);
+            return restTemplate.postForEntity(
+                            uri,
+                            entity,
+                            String.class
+                    )
+                    .getBody();
+        } catch (Exception ex) {
+            log.error("Ошибка при отправке json-ответа для межконтурного обновления: {} по адресу '{}'", ex.getMessage(),
+                    uri);
+        }
+        return null;
+    }
+
+    private String sendFileResponseM4dViaPvv(MultipartFile file, URI uri) {
+        try {
+            log.debug("Отправка файла-ответа {}...", file);
+            return restTemplate.postForEntity(
+                            uri,
+                            new HttpEntity<>(file.getBytes()),
+                            String.class
+                    )
+                    .getBody();
+        } catch (Exception ex) {
+            log.error("Ошибка при отправке файла-ответа для межконтурного обновления: {} по адресу '{}'", ex.getMessage(),
+                    uri);
+        }
+        return null;
+    }
+
+    public String convertM4dResponseInfoToString(M4dResponseInfo info) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(info);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String convertM4dRevokeResponseInfoToString(M4dRevokeResponseInfo info) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(info);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

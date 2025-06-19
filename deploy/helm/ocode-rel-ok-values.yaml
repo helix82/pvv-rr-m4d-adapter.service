@@ -63,6 +63,16 @@ secret:
     #secret
     USER_PASSWORD: c2VjcmV0
     M4D_SOUL: Ig==
+    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/manual/inbox/
+    FNS_RECEIVE_RESPONSE_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvaW5ib3gv
+    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/manual/inbox/json/
+    FNS_RECEIVE_JSON_RESPONSE_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvaW5ib3gvanNvbi8=
+    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/manual/rrm4d/send-registration-request-json
+    FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvcnJtNGQvc2VuZC1yZWdpc3RyYXRpb24tcmVxdWVzdC1qc29u
+    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/manual/rrm4d/send-status-request-file
+    FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvcnJtNGQvc2VuZC1zdGF0dXMtcmVxdWVzdC1maWxl
+    # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/manual/rrm4d/send-revocation-request-json
+    FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvcnJtNGQvc2VuZC1yZXZvY2F0aW9uLXJlcXVlc3QtanNvbg==
 
 jvmOptions:
   xms: 256m
@@ -95,6 +105,11 @@ env:
   USER_NAME: USER_NAME
   USER_PASSWORD: USER_PASSWORD
   M4D_SOUL: M4D_SOUL
+  FNS_RECEIVE_RESPONSE_M4D_URI: FNS_RECEIVE_RESPONSE_M4D_URI
+  FNS_RECEIVE_JSON_RESPONSE_M4D_URI: FNS_RECEIVE_JSON_RESPONSE_M4D_URI
+  FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI: FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI
+  FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI: FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI
+  FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI
 
 appName: pvv-rr-m4d-adapter
 
