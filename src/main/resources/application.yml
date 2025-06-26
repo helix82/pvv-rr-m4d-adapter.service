@@ -39,3 +39,14 @@ springdoc:
     enabled: true
   server:
     url: ${SWAGGER_URL:http://localhost:8057}
+  show-actuator: true
+
+#actuator
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: ${ACTUATOR_ENDPOINTS:*}
