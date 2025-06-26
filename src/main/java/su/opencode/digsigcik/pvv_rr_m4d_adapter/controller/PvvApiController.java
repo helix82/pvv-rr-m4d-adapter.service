@@ -13,14 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.annotation.PvvRrM4dExceptionHandler;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.PvvApiService;
 
 import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 
 
 @Slf4j
-@PvvRrM4dExceptionHandler
 @RestController
 @RequestMapping("/api/v1/from-zk")
 @CrossOrigin(origins = "*")

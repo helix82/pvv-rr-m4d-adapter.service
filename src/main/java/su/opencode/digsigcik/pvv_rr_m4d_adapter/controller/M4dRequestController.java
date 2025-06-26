@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.annotation.PvvRrM4dExceptionHandler;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
@@ -27,7 +26,6 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.CustomMultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +35,6 @@ import java.util.Objects;
 import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 
 @Slf4j
-@PvvRrM4dExceptionHandler
 @RestController
 @RequestMapping("/api/v1/pvv-rr-m4d-adapter")
 @CrossOrigin(origins = "*")
