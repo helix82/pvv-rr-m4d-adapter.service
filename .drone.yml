@@ -7,11 +7,13 @@ steps:
     image: drillster/drone-volume-cache
     volumes:
       - name: cache
-        path: /cache
+        path: /cache/pvv-rr-m4d-adapter.service
     settings:
       restore: true
       mount:
-        - /cache
+        - /cache/pvv-rr-m4d-adapter.service
+      exclude:
+        - '**/cache/**'
 
   - name: build
     image: plugins/docker
@@ -42,7 +44,7 @@ steps:
       - name: dockersock
         path: /var/run/docker.sock
       - name: cache
-        path: /cache
+        path: /cache/pvv-rr-m4d-adapter.service
     depends_on:
       - restore-cache
 
@@ -50,11 +52,13 @@ steps:
     image: drillster/drone-volume-cache
     volumes:
       - name: cache
-        path: /cache
+        path: /cache/pvv-rr-m4d-adapter.service
     settings:
       rebuild: true
       mount:
-        - /cache
+        - /cache/pvv-rr-m4d-adapter.service
+      exclude:
+        - '**/cache/**'
     depends_on:
       - build
 
