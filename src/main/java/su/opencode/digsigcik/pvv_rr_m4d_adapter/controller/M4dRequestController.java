@@ -1,5 +1,6 @@
 package su.opencode.digsigcik.pvv_rr_m4d_adapter.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -15,10 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dStatusRequestDto;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.*;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.MockApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.PvvApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.RealApiService;
@@ -80,8 +78,10 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
-    @GetMapping(value = "/receive/{guidXml}", produces = "application/zip")
-    public ResponseEntity<?> getM4dRequestStatus(@PathVariable String guidXml, HttpServletResponse response) {
+    @PostMapping(value = "/receive/{json}", produces = "application/zip")
+    public ResponseEntity<?> getM4dRequestStatus(@PathVariable String json, HttpServletResponse response) throws JsonProcessingException {
+        CheckByGuidRequestDto requestDto = ConvertUtils.convertStringToClass(json, CheckByGuidRequestDto.class);
+        String guidXml = requestDto.getGuid();
         List<String> files = List.of();
         try {
             M4dFnsDataResponse report = realApiService.getM4dRequestStatus(guidXml);
