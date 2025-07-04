@@ -92,17 +92,25 @@ public class M4dRequestController {
                     files.addAll(filesRevoke);
                 }
             }
-            ByteArrayResource resource = realApiService.createArchiveWithM4dRequestStatus(guidXml, report, files);
-            try {
-                response.setHeader("Content-Disposition", "attachment; filename=\"" + guidXml + ".zip\"");
-
-                return new ResponseEntity<>(
-                        resource,
-                        HttpStatus.OK
-                );
-            } catch (Exception e) {
-                return ResponseEntity.noContent().build();
-            }
+//            ByteArrayResource resource = realApiService.createArchiveWithM4dRequestStatus(guidXml, report, files);
+//            try {
+//                response.setHeader("Content-Disposition", "attachment; filename=\"" + guidXml + ".zip\"");
+//
+//                return new ResponseEntity<>(
+//                        resource,
+//                        HttpStatus.OK
+//                );
+//            } catch (Exception e) {
+//                return ResponseEntity.noContent().build();
+//            }
+            File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
+            MultipartFile zipFile = new CustomMultipartFile(resource);
+            String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Request-ID", res);
+            Map<String, String> body = new HashMap<>();
+            body.put("result", SENDING_RESPONSE_GET_M4D_STATUS_FROM_RR);
+            return new ResponseEntity<>(body, headers, HttpStatus.OK);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
