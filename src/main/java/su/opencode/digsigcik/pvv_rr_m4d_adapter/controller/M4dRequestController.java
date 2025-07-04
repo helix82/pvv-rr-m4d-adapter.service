@@ -56,7 +56,7 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
-    @PostMapping(value ="/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value ="/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadM4dZip(@RequestParam("file") MultipartFile zipFile) {
         String fileName = zipFile.getOriginalFilename();
         if (fileName != null && !fileName.toLowerCase().endsWith(".zip")) {
@@ -78,7 +78,7 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
-    @PostMapping(value = "/receive/{json}", produces = "application/zip")
+    @PostMapping(value = "/receive/{json}")
     public ResponseEntity<?> getM4dRequestStatus(@PathVariable String json, HttpServletResponse response) throws JsonProcessingException {
         CheckByGuidRequestDto requestDto = ConvertUtils.convertStringToClass(json, CheckByGuidRequestDto.class);
         String guidXml = requestDto.getGuid();
@@ -117,7 +117,7 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
-    @PostMapping(value ="/revoke/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value ="/revoke/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadM4dRevokeZip(@RequestParam("file") MultipartFile zipFile) {
         String fileName = zipFile.getOriginalFilename();
         if (fileName != null && !fileName.toLowerCase().endsWith(".zip")) {
