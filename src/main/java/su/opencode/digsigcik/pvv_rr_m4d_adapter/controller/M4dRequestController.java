@@ -78,8 +78,8 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
-    @PostMapping(value = "/receive/{json}")
-    public ResponseEntity<?> getM4dRequestStatus(@PathVariable String json, HttpServletResponse response) throws JsonProcessingException {
+    @PostMapping(value = "/receive")
+    public ResponseEntity<?> getM4dRequestStatus(@RequestBody String json, HttpServletResponse response) throws JsonProcessingException {
         CheckByGuidRequestDto requestDto = ConvertUtils.convertStringToClass(json, CheckByGuidRequestDto.class);
         String guidXml = requestDto.getGuid();
         List<String> files = List.of();
