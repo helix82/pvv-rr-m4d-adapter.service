@@ -23,7 +23,6 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.RealApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.CustomMultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -63,7 +62,10 @@ public class M4dRequestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NO_ZIP);
         }
         try {
-            return ResponseEntity.ok(realApiService.processM4dZip(zipFile));
+            String res;
+            M4dResponseInfo response = realApiService.processM4dZip(zipFile);
+            res = pvvApiService.sendResponseRegisterM4dFromRR(response);
+            return getResponseEntity(res, SENDING_RESPONSE_M4D_TO_RR);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
@@ -79,7 +81,7 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
     @PostMapping(value = "/receive")
-    public ResponseEntity<?> getM4dRequestStatus(@RequestBody String json, HttpServletResponse response) throws JsonProcessingException {
+    public ResponseEntity<?> getM4dRequestStatus(@RequestBody String json) throws JsonProcessingException {
         CheckByGuidRequestDto requestDto = ConvertUtils.convertStringToClass(json, CheckByGuidRequestDto.class);
         String guidXml = requestDto.getGuid();
         List<String> files = List.of();
@@ -92,25 +94,10 @@ public class M4dRequestController {
                     files.addAll(filesRevoke);
                 }
             }
-//            ByteArrayResource resource = realApiService.createArchiveWithM4dRequestStatus(guidXml, report, files);
-//            try {
-//                response.setHeader("Content-Disposition", "attachment; filename=\"" + guidXml + ".zip\"");
-//
-//                return new ResponseEntity<>(
-//                        resource,
-//                        HttpStatus.OK
-//                );
-//            } catch (Exception e) {
-//                return ResponseEntity.noContent().build();
-//            }
             File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
             MultipartFile zipFile = new CustomMultipartFile(resource);
             String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Request-ID", res);
-            Map<String, String> body = new HashMap<>();
-            body.put("result", SENDING_RESPONSE_GET_M4D_STATUS_FROM_RR);
-            return new ResponseEntity<>(body, headers, HttpStatus.OK);
+            return getResponseEntity(res, SENDING_RESPONSE_GET_M4D_STATUS_FROM_RR);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
@@ -132,7 +119,10 @@ public class M4dRequestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NO_ZIP);
         }
         try {
-            return ResponseEntity.ok(realApiService.processM4dRevokeZip(zipFile));
+            String res;
+            M4dRevokeResponseInfo response = realApiService.processM4dRevokeZip(zipFile);
+            res = pvvApiService.sendResponseRevokeM4dFromRR(response);
+            return getResponseEntity(res, SENDING_RESPONSE_M4D_REVOKE_TO_RR);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
@@ -156,8 +146,6 @@ public class M4dRequestController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", res.getFilename()))
                     .body(res);
 
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -187,11 +175,7 @@ public class M4dRequestController {
         try {
             M4dResponseInfo response = realApiService.processM4dZip(zipFile);
             String res = pvvApiService.sendResponseRegisterM4dFromRR(response);
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Request-ID", res);
-            Map<String, String> body = new HashMap<>();
-            body.put("result", SENDING_RESPONSE_M4D_TO_RR);
-            return new ResponseEntity<>(body, headers, HttpStatus.OK);
+            return getResponseEntity(res, SENDING_RESPONSE_M4D_TO_RR);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
@@ -223,11 +207,7 @@ public class M4dRequestController {
         try {
             M4dRevokeResponseInfo response = realApiService.processM4dRevokeZip(zipFile);
             String res = pvvApiService.sendResponseRevokeM4dFromRR(response);
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Request-ID", res);
-            Map<String, String> body = new HashMap<>();
-            body.put("result", SENDING_RESPONSE_M4D_REVOKE_TO_RR);
-            return new ResponseEntity<>(body, headers, HttpStatus.OK);
+            return getResponseEntity(res, SENDING_RESPONSE_M4D_REVOKE_TO_RR);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
@@ -243,7 +223,7 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
     @GetMapping(value = "/receive/{messageId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getM4dRequestStatusFromRR(@PathVariable String messageId, HttpServletResponse response) {
+    public ResponseEntity<?> getM4dRequestStatusFromRR(@PathVariable String messageId) {
         M4dStatusRequestDto m4dStatusRequestDto;
         try {
             String res = pvvApiService.receiveJsonResponseM4dToRR(messageId);
@@ -264,16 +244,21 @@ public class M4dRequestController {
             File resource = realApiService.createArchiveWithM4dRequestStatusToFile(m4dStatusRequestDto.getGuid(), report, files);
             MultipartFile zipFile = new CustomMultipartFile(resource);
             String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Request-ID", res);
-            Map<String, String> body = new HashMap<>();
-            body.put("result", SENDING_RESPONSE_GET_M4D_STATUS_FROM_RR);
-            return new ResponseEntity<>(body, headers, HttpStatus.OK);
+            return getResponseEntity(res, SENDING_RESPONSE_GET_M4D_STATUS_FROM_RR);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
+
+    private ResponseEntity<?> getResponseEntity(String res, String responseString) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Request-ID", res);
+        Map<String, String> body = new HashMap<>();
+        body.put("result", responseString);
+        return new ResponseEntity<>(body, headers, HttpStatus.OK);
+    }
+
 
 }
