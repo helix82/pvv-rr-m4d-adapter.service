@@ -152,7 +152,8 @@ public class M4dRequestController {
     }
 
     @Operation(summary = CONTROLLER_SEND_M4D_TO_RR,
-            description = CONTROLLER_SEND_M4D_TO_RR)
+            description = CONTROLLER_SEND_M4D_TO_RR,
+            deprecated = true)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
@@ -184,7 +185,8 @@ public class M4dRequestController {
     }
 
     @Operation(summary = CONTROLLER_SEND_M4D_REVOKE_TO_RR,
-            description = CONTROLLER_SEND_M4D_REVOKE_TO_RR)
+            description = CONTROLLER_SEND_M4D_REVOKE_TO_RR,
+            deprecated = true)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
@@ -216,7 +218,8 @@ public class M4dRequestController {
     }
 
     @Operation(summary = CONTROLLER_GET_M4D_STATUS_FROM_RR,
-            description = CONTROLLER_GET_M4D_STATUS_FROM_RR)
+            description = CONTROLLER_GET_M4D_STATUS_FROM_RR,
+            deprecated = true)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
