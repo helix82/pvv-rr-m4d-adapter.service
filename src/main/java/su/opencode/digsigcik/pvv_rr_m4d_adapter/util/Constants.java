@@ -12,9 +12,11 @@ public interface Constants {
     String CONTROLLER_SEND_M4D_REVOKE_TO_RR = "Отправить заявление на отзыв МЧД на регистрацию в РР МЧД";
     String CONTROLLER_GET_M4D_STATUS_FROM_RR = "Получить статус МЧД из РР МЧД";
     String CONTROLLER_GET_M4D_BY_STATUS = "Получить статус МЧД через API РР МЧД";
+    String CONTROLLER_GET_FULL_M4D_BY_GUID_AND_INNS = "Получить полные данные по МЧД через API РР МЧД";
     String SENDING_RESPONSE_M4D_TO_RR = "Ответ регистрации МЧД в РР МЧД готов для межконтурного обмена";
     String SENDING_RESPONSE_M4D_REVOKE_TO_RR = "Ответ регистрации заявления на отзыв МЧД в РР МЧД готов для межконтурного обмена";
     String SENDING_RESPONSE_GET_M4D_STATUS_FROM_RR = "Ответ получения статуса МЧД из РР МЧД готов для межконтурного обмена";
+    String SENDING_RESPONSE_GET_FULL_M4D_FROM_RR = "Ответ получения полных данных по МЧД из РР МЧД готов для межконтурного обмена";
     String API_RESPONSE_CODE_200_MESSAGE = "Успешно"; //Successfully
     String API_RESPONSE_CODE_201_MESSAGE = "Создано";
     String API_RESPONSE_CODE_204_MESSAGE = "Нет контента";

@@ -1,5 +1,6 @@
 package su.opencode.digsigcik.pvv_rr_m4d_adapter.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -15,10 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dStatusRequestDto;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.*;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.MockApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.PvvApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.RealApiService;
@@ -27,10 +25,8 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.CustomMultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.io.FileOutputStream;
+import java.util.*;
 
 import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 
@@ -98,6 +94,52 @@ public class M4dRequestController {
 
                 return new ResponseEntity<>(
                         resource,
+                        HttpStatus.OK
+                );
+            } catch (Exception e) {
+                return ResponseEntity.noContent().build();
+            }
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = CONTROLLER_GET_FULL_M4D_BY_GUID_AND_INNS,
+            description = CONTROLLER_GET_FULL_M4D_BY_GUID_AND_INNS)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
+            @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
+            @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
+    })
+    @PostMapping(value = "/receive", produces = "application/zip")
+    public ResponseEntity<?> getFullM4dRequest(@RequestBody String json, HttpServletResponse response) throws JsonProcessingException {
+        CheckByGuidRequestDto requestDto = ConvertUtils.convertStringToClass(json, CheckByGuidRequestDto.class);
+        String guidXml = requestDto.getGuid();
+        List<String> files = new ArrayList<>();
+
+        try {
+            M4dFullFnsDataResponse report = realApiService.getFullM4dRequest(requestDto);
+                ByteArrayResource file = report.getFile();
+                if (file != null && file.contentLength() > 0) {
+                    String tempFileResource = "/tmp/resource_" + file.getFilename();
+                    try (FileOutputStream fos = new FileOutputStream(tempFileResource)) {
+                        fos.write(file.getByteArray());
+                    }
+                    files.add(tempFileResource);
+                    report.setFile(null);
+                }
+            File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
+            MultipartFile zipFile = new CustomMultipartFile(resource);
+            //String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
+            //return getResponseEntity(res, SENDING_RESPONSE_GET_FULL_M4D_FROM_RR);
+
+            try {
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + guidXml + ".zip\"");
+
+                return new ResponseEntity<>(
+                        zipFile.getBytes(),
                         HttpStatus.OK
                 );
             } catch (Exception e) {
@@ -266,6 +308,14 @@ public class M4dRequestController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
+    }
+
+    private ResponseEntity<?> getResponseEntity(String res, String responseString) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Request-ID", res);
+        Map<String, String> body = new HashMap<>();
+        body.put("result", responseString);
+        return new ResponseEntity<>(body, headers, HttpStatus.OK);
     }
 
 }
