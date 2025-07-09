@@ -23,6 +23,7 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.RealApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.CustomMultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.*;
