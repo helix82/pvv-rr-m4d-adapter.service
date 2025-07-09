@@ -24,10 +24,8 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.CustomMultipartFile;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.io.FileOutputStream;
+import java.util.*;
 
 import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 
@@ -98,6 +96,52 @@ public class M4dRequestController {
             MultipartFile zipFile = new CustomMultipartFile(resource);
             String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
             return getResponseEntity(res, SENDING_RESPONSE_GET_M4D_STATUS_FROM_RR);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = CONTROLLER_GET_FULL_M4D_BY_GUID_AND_INNS,
+            description = CONTROLLER_GET_FULL_M4D_BY_GUID_AND_INNS)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
+            @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
+            @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
+    })
+    @PostMapping(value = "/receive", produces = "application/zip")
+    public ResponseEntity<?> getFullM4dRequest(@RequestBody String json, HttpServletResponse response) throws JsonProcessingException {
+        CheckByGuidRequestDto requestDto = ConvertUtils.convertStringToClass(json, CheckByGuidRequestDto.class);
+        String guidXml = requestDto.getGuid();
+        List<String> files = new ArrayList<>();
+
+        try {
+            M4dFullFnsDataResponse report = realApiService.getFullM4dRequest(requestDto);
+                ByteArrayResource file = report.getFile();
+                if (file != null && file.contentLength() > 0) {
+                    String tempFileResource = "/tmp/resource_" + file.getFilename();
+                    try (FileOutputStream fos = new FileOutputStream(tempFileResource)) {
+                        fos.write(file.getByteArray());
+                    }
+                    files.add(tempFileResource);
+                    report.setFile(null);
+                }
+            File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
+            MultipartFile zipFile = new CustomMultipartFile(resource);
+            //String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
+            //return getResponseEntity(res, SENDING_RESPONSE_GET_FULL_M4D_FROM_RR);
+
+            try {
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + guidXml + ".zip\"");
+
+                return new ResponseEntity<>(
+                        zipFile.getBytes(),
+                        HttpStatus.OK
+                );
+            } catch (Exception e) {
+                return ResponseEntity.noContent().build();
+            }
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {

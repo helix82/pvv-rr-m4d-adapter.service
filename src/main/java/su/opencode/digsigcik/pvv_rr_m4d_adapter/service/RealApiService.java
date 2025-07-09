@@ -12,14 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.*;
 import org.springframework.web.multipart.MultipartFile;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.AuthResponse;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dFnsDataResponse;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.*;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.HashUtils;
 
 import java.io.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,15 +38,15 @@ public class RealApiService {
     private final RestTemplate restTemplate;
 
     @Value("${rr-m4d.get-token.uri}")
-    private String GET_TOKEN_URI;
+    private URI GET_TOKEN_URI;
     @Value("${rr-m4d.registry-m4d.uri}")
-    private String REGISTRY_M4D_URI;
+    private URI REGISTRY_M4D_URI;
     @Value("${rr-m4d.registry-revoke.uri}")
     private String REGISTRY_REVOKE_URI;
     @Value("${rr-m4d.user-name}")
-    private String USER_NAME;
+    private URI USER_NAME;
     @Value("${rr-m4d.user-password}")
-    private String USER_PASSWORD;
+    private URI USER_PASSWORD;
     @Value("${rr-m4d.soul}")
     private String M4D_SOUL;
 
@@ -190,6 +188,55 @@ public class RealApiService {
             throw new RuntimeException("Error: " + e.getMessage());
         }
         return m4dFnsDataResponse;
+    }
+
+    public M4dFullFnsDataResponse getFullM4dRequest(CheckByGuidRequestDto requestDto) throws JsonProcessingException {
+        M4dFullFnsDataResponse m4dFullFnsDataResponse = new M4dFullFnsDataResponse();
+        m4dFullFnsDataResponse.setGuid(requestDto.getGuid());
+        m4dFullFnsDataResponse.setPrincipalInn(requestDto.getPrincipalInn());
+        m4dFullFnsDataResponse.setRepresentativeInn(requestDto.getRepresentativeInn());
+        AuthResponse authResponse;
+        authResponse = getBearerRequest();
+        if (authResponse.getAccessToken()==null) {
+            M4dFullFnsDataResponse.Error error = ConvertUtils.convertClassErrorToClassError(authResponse.getError(), M4dFullFnsDataResponse.Error.class);
+            m4dFullFnsDataResponse.setError(error);
+            return m4dFullFnsDataResponse;
+        }
+        HttpHeaders headers = createHeaders();
+        try {
+            headers.setAccept(Collections.singletonList(MediaType.ALL));
+            headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+            String urlTemplate = REGISTRY_M4D_URI + "/zip/?poaNumber={poaNumber}&issuerInn={issuerInn}&representativeInn={representativeInn}";
+
+            Map<String, String> params = Map.of(
+                    "poaNumber", requestDto.getGuid(),
+                    "issuerInn", requestDto.getPrincipalInn(),
+                    "representativeInn", requestDto.getRepresentativeInn()
+            );
+
+            try {
+                ResponseEntity<ByteArrayResource> response = restTemplate.exchange(
+                        urlTemplate, //REGISTRY_M4D_URI + "/zip/",
+                        HttpMethod.GET,
+                        requestEntity,
+                        ByteArrayResource.class,
+                        params
+                );
+                m4dFullFnsDataResponse.setFile(response.getBody());
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                M4dFullFnsDataResponse.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), M4dFullFnsDataResponse.Error.class);
+                m4dFullFnsDataResponse.setError(error);
+            } catch (Exception e) {
+                throw new RuntimeException("Error: " + e.getMessage());
+            }
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("Server Error: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error: " + e.getMessage());
+        }
+        return m4dFullFnsDataResponse;
     }
 
     private AuthResponse getBearerRequest() throws JsonProcessingException {
@@ -442,7 +489,7 @@ public class RealApiService {
         return new ByteArrayResource(Files.readAllBytes((new File(tempZipFile)).toPath()));
     }
 
-    public File createArchiveWithM4dRequestStatusToFile(String guidXml, M4dFnsDataResponse response, List<String> files) throws IOException {
+    public File createArchiveWithM4dRequestStatusToFile(String guidXml, Object report, List<String> files) throws IOException {
         String tempZipFile = "/tmp/ON_EMCHD_" + guidXml + ".zip";
         String tempFileResponse = "/tmp/status_ON_EMCHD_" + guidXml + ".json";
         List<String> filesList = new ArrayList<>();
@@ -450,7 +497,7 @@ public class RealApiService {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             // Сериализация объекта в JSON и запись в файл
-            objectMapper.writeValue(new File(tempFileResponse), response);
+            objectMapper.writeValue(new File(tempFileResponse), report);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -30,5 +30,5 @@ public class M4dRevokeResponseInfo {
     @JsonProperty("dictionary_code")
     private String dictionary_code; // Код ошибки в справочнике ERROR-кодов
     @JsonProperty("meta")
-    private String meta; // Метаданные ошибки
+    private Object meta; // Метаданные ошибки
 }
