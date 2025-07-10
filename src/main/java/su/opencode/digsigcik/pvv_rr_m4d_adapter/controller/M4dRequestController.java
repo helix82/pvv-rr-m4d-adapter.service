@@ -118,15 +118,18 @@ public class M4dRequestController {
         List<String> files = new ArrayList<>();
 
         try {
-            M4dFullFnsDataResponse report = realApiService.getFullM4dRequest(requestDto);
-                ByteArrayResource file = report.getFile();
+            M4dFnsDataResponse report = realApiService.getM4dRequestStatus(guidXml);
+            M4dFnsDataResponse reportData = realApiService.getFullM4dRequest(requestDto);
+            report.setPrincipalInn(reportData.getPrincipalInn());
+            report.setRepresentativeInn(reportData.getRepresentativeInn());
+            report.setReqStatus(reportData.getReqStatus());
+                ByteArrayResource file = reportData.getFile();
                 if (file != null && file.contentLength() > 0) {
                     String tempFileResource = "/tmp/resource_" + file.getFilename();
                     try (FileOutputStream fos = new FileOutputStream(tempFileResource)) {
                         fos.write(file.getByteArray());
                     }
                     files.add(tempFileResource);
-                    report.setFile(null);
                 }
             File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
             MultipartFile zipFile = new CustomMultipartFile(resource);

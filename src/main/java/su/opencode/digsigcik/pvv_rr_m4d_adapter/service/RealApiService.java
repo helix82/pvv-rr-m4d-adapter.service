@@ -190,17 +190,17 @@ public class RealApiService {
         return m4dFnsDataResponse;
     }
 
-    public M4dFullFnsDataResponse getFullM4dRequest(CheckByGuidRequestDto requestDto) throws JsonProcessingException {
-        M4dFullFnsDataResponse m4dFullFnsDataResponse = new M4dFullFnsDataResponse();
-        m4dFullFnsDataResponse.setGuid(requestDto.getGuid());
-        m4dFullFnsDataResponse.setPrincipalInn(requestDto.getPrincipalInn());
-        m4dFullFnsDataResponse.setRepresentativeInn(requestDto.getRepresentativeInn());
+    public M4dFnsDataResponse getFullM4dRequest(CheckByGuidRequestDto requestDto) throws JsonProcessingException {
+        M4dFnsDataResponse m4dFnsDataResponse = new M4dFnsDataResponse();
+        m4dFnsDataResponse.setGuid(requestDto.getGuid());
+        m4dFnsDataResponse.setPrincipalInn(requestDto.getPrincipalInn());
+        m4dFnsDataResponse.setRepresentativeInn(requestDto.getRepresentativeInn());
         AuthResponse authResponse;
         authResponse = getBearerRequest();
         if (authResponse.getAccessToken()==null) {
-            M4dFullFnsDataResponse.Error error = ConvertUtils.convertClassErrorToClassError(authResponse.getError(), M4dFullFnsDataResponse.Error.class);
-            m4dFullFnsDataResponse.setError(error);
-            return m4dFullFnsDataResponse;
+            M4dFnsDataResponse.Error error = ConvertUtils.convertClassErrorToClassError(authResponse.getError(), M4dFnsDataResponse.Error.class);
+            m4dFnsDataResponse.setError(error);
+            return m4dFnsDataResponse;
         }
         HttpHeaders headers = createHeaders();
         try {
@@ -224,10 +224,10 @@ public class RealApiService {
                         ByteArrayResource.class,
                         params
                 );
-                m4dFullFnsDataResponse.setFile(response.getBody());
+                m4dFnsDataResponse.setFile(response.getBody());
             } catch (HttpClientErrorException | HttpServerErrorException e) {
-                M4dFullFnsDataResponse.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), M4dFullFnsDataResponse.Error.class);
-                m4dFullFnsDataResponse.setError(error);
+                M4dFnsDataResponse.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), M4dFnsDataResponse.Error.class);
+                m4dFnsDataResponse.setError(error);
             } catch (Exception e) {
                 throw new RuntimeException("Error: " + e.getMessage());
             }
@@ -236,7 +236,7 @@ public class RealApiService {
         } catch (Exception e) {
             throw new RuntimeException("Error: " + e.getMessage());
         }
-        return m4dFullFnsDataResponse;
+        return m4dFnsDataResponse;
     }
 
     private AuthResponse getBearerRequest() throws JsonProcessingException {

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
 
 @Data
 @AllArgsConstructor
@@ -39,6 +40,14 @@ public class M4dFnsDataResponse {
     private String issuerSnilsHash;
     @JsonProperty("issuerOgrnHash")
     private String issuerOgrnHash;
+    @JsonProperty("principalInn")
+    private String principalInn;
+    @JsonProperty("representativeInn")
+    private String representativeInn;
+    @JsonProperty("file")
+    private ByteArrayResource file;
+    @JsonProperty("reqStatus")
+    private String reqStatus;
     @JsonProperty("error")
     private Error error;
 
