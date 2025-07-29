@@ -134,16 +134,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
                   key: {{ .Values.env.M4D_SOUL }}
-            - name: FNS_RECEIVE_RESPONSE_M4D_URI
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secret.name }}
-                  key: {{ .Values.env.FNS_RECEIVE_RESPONSE_M4D_URI }}
-            - name: FNS_RECEIVE_JSON_RESPONSE_M4D_URI
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secret.name }}
-                  key: {{ .Values.env.FNS_RECEIVE_JSON_RESPONSE_M4D_URI }}
             - name: FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI
               valueFrom:
                 secretKeyRef:

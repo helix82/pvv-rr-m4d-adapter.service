@@ -155,8 +155,7 @@ public class RealApiService {
     public M4dFnsDataResponse getM4dRequestStatus(String guidXml) throws JsonProcessingException {
         M4dFnsDataResponse m4dFnsDataResponse = new M4dFnsDataResponse();
         m4dFnsDataResponse.setGuid(guidXml);
-        AuthResponse authResponse;
-        authResponse = getBearerRequest();
+        AuthResponse authResponse = getBearerRequest();
         if (authResponse.getAccessToken()==null) {
             M4dFnsDataResponse.Error error = ConvertUtils.convertClassErrorToClassError(authResponse.getError(), M4dFnsDataResponse.Error.class);
             m4dFnsDataResponse.setError(error);
@@ -467,28 +466,6 @@ public class RealApiService {
         }
     }
 
-    public ByteArrayResource createArchiveWithM4dRequestStatus(String guidXml, M4dFnsDataResponse response, List<String> files) throws IOException {
-        String tempZipFile = "/tmp/ON_EMCHD_" + guidXml + ".zip";
-        String tempFileResponse = "/tmp/status_ON_EMCHD_" + guidXml + ".json";
-        List<String> filesList = new ArrayList<>();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            // Сериализация объекта в JSON и запись в файл
-            objectMapper.writeValue(new File(tempFileResponse), response);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        filesList.add(tempFileResponse);
-        if (!files.isEmpty()) {
-            filesList.addAll(files);
-        }
-        createZip(tempZipFile, filesList);
-        File f = new File(tempFileResponse);
-        f.delete();
-        return new ByteArrayResource(Files.readAllBytes((new File(tempZipFile)).toPath()));
-    }
-
     public File createArchiveWithM4dRequestStatusToFile(String guidXml, Object report, List<String> files) throws IOException {
         String tempZipFile = "/tmp/ON_EMCHD_" + guidXml + ".zip";
         String tempFileResponse = "/tmp/status_ON_EMCHD_" + guidXml + ".json";
@@ -499,7 +476,7 @@ public class RealApiService {
             // Сериализация объекта в JSON и запись в файл
             objectMapper.writeValue(new File(tempFileResponse), report);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         filesList.add(tempFileResponse);
         if (!files.isEmpty()) {
@@ -507,7 +484,10 @@ public class RealApiService {
         }
         createZip(tempZipFile, filesList);
         File f = new File(tempFileResponse);
-        f.delete();
+        boolean res = f.delete();
+        if (!res) {
+            log.warn(DELETE_TEMP_FILE_ERROR);
+        }
         return new File(tempZipFile);
     }
 
@@ -557,16 +537,16 @@ public class RealApiService {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return guid;
     }
 
-    public boolean isZipFile(File file) {
-        try (ZipFile zipFile = new ZipFile(file)) {
-            return true;
-        } catch (IOException e) {
+    public boolean isNotZipFile(File file) {
+        try (ZipFile ignored = new ZipFile(file)) {
             return false;
+        } catch (IOException e) {
+            return true;
         }
     }
 

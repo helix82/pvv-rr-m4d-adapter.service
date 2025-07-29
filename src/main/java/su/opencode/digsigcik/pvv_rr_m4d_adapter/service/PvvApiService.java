@@ -4,16 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dResponseInfo;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.M4dRevokeResponseInfo;
-import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 
-import java.io.IOException;
 import java.net.URI;
 
 @Slf4j
@@ -23,10 +20,6 @@ public class PvvApiService {
 
     @Value("${pvv.get-message-content}")
     private URI PVV_GET_CONTENT_URI;
-    @Value("${pvv.fns-receive-response-m4d}")
-    private URI FNS_RECEIVE_RESPONSE_M4D_URI;
-    @Value("${pvv.fns-receive-json-response-m4d}")
-    private URI FNS_RECEIVE_JSON_RESPONSE_M4D_URI;
     @Value("${pvv.fns-send-response-registration-request-m4d}")
     private URI FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI;
     @Value("${pvv.fns-send-response-status-request-m4d}")
@@ -38,7 +31,7 @@ public class PvvApiService {
         this.restTemplate = restTemplate;
     }
 
-    public ByteArrayResource getResource(String correlationId) throws IOException {
+    public ByteArrayResource getResource(String correlationId) {
 
         ResponseEntity<ByteArrayResource> response = restTemplate.exchange(
                 PVV_GET_CONTENT_URI.resolve(correlationId),
@@ -46,52 +39,7 @@ public class PvvApiService {
                 HttpEntity.EMPTY,
                 ByteArrayResource.class
         );
-        var body = response.getBody();
-        return body;
-    }
-
-    public ByteArrayResource receiveResponseM4dToRR(String messageId) {
-        ByteArrayResource res = receiveResponseFnsViaPvv(messageId, FNS_RECEIVE_RESPONSE_M4D_URI);
-        log.info(messageId);
-        log.info(String.valueOf(res));
-        return res;
-    }
-
-    public String receiveJsonResponseM4dToRR(String messageId) {
-        String res = receiveJsonResponseFnsViaPvv(messageId, FNS_RECEIVE_JSON_RESPONSE_M4D_URI);
-        log.info(messageId);
-        log.info(res);
-        return res;
-    }
-
-    private ByteArrayResource receiveResponseFnsViaPvv(String messageId, URI uri) {
-        try {
-            log.debug("Получение ответа {}...", messageId);
-            return restTemplate.getForEntity(
-                            uri+messageId,
-                            ByteArrayResource.class
-                    )
-                    .getBody();
-        } catch (Exception ex) {
-            log.error("Ошибка при получении ответа для межконтурного обновления: {} по адресу '{}'", ex.getMessage(),
-                    uri);
-        }
-        return null;
-    }
-
-    private String receiveJsonResponseFnsViaPvv(String messageId, URI uri) {
-        try {
-            log.debug("Получение json-ответа {}...", messageId);
-            return restTemplate.getForEntity(
-                            uri+messageId,
-                            String.class
-                    )
-                    .getBody();
-        } catch (Exception ex) {
-            log.error("Ошибка при получении json-ответа для межконтурного обновления: {} по адресу '{}'", ex.getMessage(),
-                    uri);
-        }
-        return null;
+        return response.getBody();
     }
 
     public String sendResponseRegisterM4dFromRR(M4dResponseInfo response) {
@@ -178,7 +126,7 @@ public class PvvApiService {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(info);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             return null;
         }
     }
@@ -188,7 +136,7 @@ public class PvvApiService {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(info);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             return null;
         }
     }

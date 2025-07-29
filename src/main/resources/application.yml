@@ -26,9 +26,6 @@ rr-m4d:
 
 pvv:
   get-message-content: ${GET_PVV_CONTENT_URI:http://localhost:8078/api/v1/inbox/}
-  fns-receive-response-m4d: ${FNS_RECEIVE_RESPONSE_M4D_URI:https://pvv-adapter.rel.ok.essocode.ru/api/v1/manual/inbox/}
-  fns-receive-json-response-m4d: ${FNS_RECEIVE_JSON_RESPONSE_M4D_URI:https://pvv-adapter.rel.ok.essocode.ru/api/v1/manual/inbox/json/}
-
   fns-send-response-registration-request-m4d: ${FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI:https://pvv-adapter.rel.ok.essocode.ru/api/v1/manual/rrm4d/send-registration-request-json}
   fns-send-response-status-request-m4d: ${FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI:https://pvv-adapter.rel.ok.essocode.ru/api/v1/manual/rrm4d/send-status-request-file}
   fns-send-response-revoke-request-m4d: ${FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI:https://pvv-adapter.rel.ok.essocode.ru/api/v1/manual/rrm4d/send-revocation-request-json}
