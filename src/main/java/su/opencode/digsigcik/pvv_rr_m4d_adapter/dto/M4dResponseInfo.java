@@ -31,7 +31,7 @@ public class M4dResponseInfo {
         @JsonProperty("instance")
         private String instance; // URL, идентифицирующий ошибку
         @JsonProperty("meta")
-        private String meta; // Метаданные ошибки
+        private Object meta; // Метаданные ошибки
         @JsonProperty("status")
         private Integer status; // HTTP статус
         @JsonProperty("title")
