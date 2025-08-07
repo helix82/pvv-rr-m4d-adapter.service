@@ -269,6 +269,7 @@ public class RealApiService {
             AuthResponse.Error error = new AuthResponse.Error();
             error.setStatus(503);
             error.setTitle("Service Unavailable");
+            error.setInstance(String.valueOf(GET_TOKEN_URI));
             authResponse.setError(error);
             return authResponse;
         }
