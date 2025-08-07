@@ -23,7 +23,7 @@ import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.CREATE_TEM
 @UtilityClass
 public class ConvertUtils {
     static ObjectMapper objectMapper = new ObjectMapper();
-    static ModelMapper modelMapper;
+    static ModelMapper modelMapper = new ModelMapper();
 
     public static <T> T convertStringToClass(String response, Class<T> clazz) throws JsonProcessingException {
         return objectMapper.readValue(response, clazz);

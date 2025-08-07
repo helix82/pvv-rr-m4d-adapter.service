@@ -240,30 +240,49 @@ public class RealApiService {
 
     private AuthResponse getBearerRequest() throws JsonProcessingException {
         AuthResponse authResponse = new AuthResponse();
-        HttpHeaders headers = createHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.ALL));
-        String auth = USER_NAME + ":" + USER_PASSWORD;
-        byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
-        String authHeader = "Basic " + new String(encodedAuth);
-        headers.set("Authorization", authHeader);
-        String requestBody = "{ \"username\": \"operator\", \"password\": \"operator\", \"grant_type\": \"password\" }";
-        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-        try {
-            ResponseEntity<AuthResponse> response = restTemplate.exchange(
-                    GET_TOKEN_URI,
-                    HttpMethod.POST,
-                    requestEntity,
-                    AuthResponse.class
-            );
-            authResponse = response.getBody();
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            AuthResponse.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), AuthResponse.Error.class);
+        if (isResourceAvailable(String.valueOf(GET_TOKEN_URI))) {
+            HttpHeaders headers = createHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(Collections.singletonList(MediaType.ALL));
+            String auth = USER_NAME + ":" + USER_PASSWORD;
+            byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
+            String authHeader = "Basic " + new String(encodedAuth);
+            headers.set("Authorization", authHeader);
+            String requestBody = "{ \"username\": \"operator\", \"password\": \"operator\", \"grant_type\": \"password\" }";
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+            try {
+                ResponseEntity<AuthResponse> response = restTemplate.exchange(
+                        GET_TOKEN_URI,
+                        HttpMethod.POST,
+                        requestEntity,
+                        AuthResponse.class
+                );
+                authResponse = response.getBody();
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                AuthResponse.Error error = ConvertUtils.convertStringErrorToClassError(e.getResponseBodyAsString(), AuthResponse.Error.class);
+                authResponse.setError(error);
+            } catch (Exception e) {
+                throw new RuntimeException("Error: " + e.getMessage());
+            }
+            return authResponse;
+        } else {
+            AuthResponse.Error error = new AuthResponse.Error();
+            error.setStatus(503);
+            error.setTitle("Service Unavailable");
             authResponse.setError(error);
-        } catch (Exception e) {
-            throw new RuntimeException("Error: " + e.getMessage());
+            return authResponse;
         }
-        return authResponse;
+    }
+
+    public boolean isResourceAvailable(String url) {
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            // Проверяем, что код ответа в диапазоне 200..299
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            // Ошибка подключения, таймаут и т.п.
+            return false;
+        }
     }
 
     public M4dResponseInfo processM4dZip(MultipartFile zipFile) {
