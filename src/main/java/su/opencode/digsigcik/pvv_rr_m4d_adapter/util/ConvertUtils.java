@@ -6,7 +6,7 @@ import lombok.experimental.UtilityClass;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.web.multipart.MultipartFile;
-import su.opencode.digsigcik.common.exception.custom.BadRequestException;
+import su.opencode.digsigcik.common.exceptions.exception.custom.BadRequestException;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.AuthResponse;
 
 import java.io.File;
