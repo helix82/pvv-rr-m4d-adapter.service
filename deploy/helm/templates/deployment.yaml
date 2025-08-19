@@ -104,21 +104,26 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
                   key: {{ .Values.env.GET_PVV_CONTENT_URI }}
-            - name: GET_TOKEN_URI
+            - name: RR_M4D_BASE_URI
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
-                  key: {{ .Values.env.GET_TOKEN_URI }}
-            - name: REGISTRY_M4D_URI
+                  key: {{ .Values.env.RR_M4D_BASE_URI }}
+            - name: RR_M4D_GET_TOKEN_URI
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
-                  key: {{ .Values.env.REGISTRY_M4D_URI }}
-            - name: REGISTRY_REVOKE_URI
+                  key: {{ .Values.env.RR_M4D_GET_TOKEN_URI }}
+            - name: RR_M4D_REGISTRY_M4D_URI
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
-                  key: {{ .Values.env.REGISTRY_REVOKE_URI }}
+                  key: {{ .Values.env.RR_M4D_REGISTRY_M4D_URI }}
+            - name: RR_M4D_REGISTRY_REVOKE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.RR_M4D_REGISTRY_REVOKE_URI }}
             - name: USER_NAME
               valueFrom:
                 secretKeyRef:

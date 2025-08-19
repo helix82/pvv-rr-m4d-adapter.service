@@ -13,12 +13,13 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 rr-m4d:
+  base-uri: ${RR_M4D_BASE_URI:https://operator.cprr-it.cprr.cloud}
   get-token:
-    uri: ${GET_TOKEN_URI:https://operator.cprr-it.cprr.cloud/api/v0/vst-oauth2/oauth/token}
+    uri: ${RR_M4D_GET_TOKEN_URI:/api/v0/vst-oauth2/oauth/token}
   registry-m4d:
-    uri: ${REGISTRY_M4D_URI:https://operator.cprr-it.cprr.cloud/api/v0/poar-webapp/integration/poa}
+    uri: ${RR_M4D_REGISTRY_M4D_URI:/api/v0/poar-webapp/integration/poa}
   registry-revoke:
-    uri: ${REGISTRY_REVOKE_URI:https://operator.cprr-it.cprr.cloud/api/v0/poar-webapp/integration/poa/revoke}
+    uri: ${RR_M4D_REGISTRY_REVOKE_URI:/api/v0/poar-webapp/integration/poa/revoke}
   user-id: some_user_id
   user-name: ${USER_NAME:demo-client}
   user-password: ${USER_PASSWORD:secret}
