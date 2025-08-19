@@ -42,11 +42,11 @@ public class RealApiService {
     @Value("${rr-m4d.registry-m4d.uri}")
     private URI REGISTRY_M4D_URI;
     @Value("${rr-m4d.registry-revoke.uri}")
-    private String REGISTRY_REVOKE_URI;
+    private URI REGISTRY_REVOKE_URI;
     @Value("${rr-m4d.user-name}")
-    private URI USER_NAME;
+    private String USER_NAME;
     @Value("${rr-m4d.user-password}")
-    private URI USER_PASSWORD;
+    private String USER_PASSWORD;
     @Value("${rr-m4d.soul}")
     private String M4D_SOUL;
 
@@ -242,12 +242,8 @@ public class RealApiService {
         AuthResponse authResponse = new AuthResponse();
         if (isResourceAvailable(String.valueOf(GET_TOKEN_URI))) {
             HttpHeaders headers = createHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.ALL));
-            String auth = USER_NAME + ":" + USER_PASSWORD;
-            byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
-            String authHeader = "Basic " + new String(encodedAuth);
-            headers.set("Authorization", authHeader);
+            headers.setBasicAuth(USER_NAME, USER_PASSWORD);
             String requestBody = "{ \"username\": \"operator\", \"password\": \"operator\", \"grant_type\": \"password\" }";
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
             try {
