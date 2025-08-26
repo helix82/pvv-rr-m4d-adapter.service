@@ -20,14 +20,14 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
   tlsEnabled: false  # New parameter to control TLS
   hosts:
-    - host: pvv-rr-m4d-adapter.pep.cikcp.ru
+    - host: pvv-rr-m4d-adapter.pep.cikrf.ru
       paths:
         - path: /
           pathType: ImplementationSpecific
   tls:
     - secretName: pvv-rr-m4d-adapter-tls
       hosts:
-        - pvv-rr-m4d-adapter.pep.cikcp.ru
+        - pvv-rr-m4d-adapter.pep.cikrf.ru
 
 secret:
   enabled: true
@@ -39,8 +39,8 @@ secret:
     SPRING_DATASOURCE_USERNAME: cGVw
     # jwjljrrjy
     SPRING_DATASOURCE_PASSWORD: andqbGpycmp5
-    #http://pvv-rr-m4d-adapter.pep.cikcp.ru
-    SWAGGER_URL: aHR0cDovL3B2di1yci1tNGQtYWRhcHRlci5wZXAuY2lrY3AucnU=
+    #http://pvv-rr-m4d-adapter.pep.cikrf.ru
+    SWAGGER_URL: aHR0cDovL3B2di1yci1tNGQtYWRhcHRlci5wZXAuY2lrcmYucnU=
     #http://log-service.master.svc.cluster.local:8055/api/v1/audit/external
     AUDIT_URL: aHR0cDovL2xvZy1zZXJ2aWNlLm1hc3Rlci5zdmMuY2x1c3Rlci5sb2NhbDo4MDU1L2FwaS92MS9hdWRpdC9leHRlcm5hbA==
     SERVER_PORT: ODA1Nw==
