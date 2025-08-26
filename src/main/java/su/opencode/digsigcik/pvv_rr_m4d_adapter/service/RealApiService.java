@@ -17,8 +17,6 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.HashUtils;
 
 import java.io.*;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,16 +35,18 @@ import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 public class RealApiService {
     private final RestTemplate restTemplate;
 
+    @Value("${rr-m4d.base-uri}")
+    private String BASE_URI;
     @Value("${rr-m4d.get-token.uri}")
-    private URI GET_TOKEN_URI;
+    private String GET_TOKEN_URI;
     @Value("${rr-m4d.registry-m4d.uri}")
-    private URI REGISTRY_M4D_URI;
+    private String REGISTRY_M4D_URI;
     @Value("${rr-m4d.registry-revoke.uri}")
     private String REGISTRY_REVOKE_URI;
     @Value("${rr-m4d.user-name}")
-    private URI USER_NAME;
+    private String USER_NAME;
     @Value("${rr-m4d.user-password}")
-    private URI USER_PASSWORD;
+    private String USER_PASSWORD;
     @Value("${rr-m4d.soul}")
     private String M4D_SOUL;
 
@@ -80,7 +80,7 @@ public class RealApiService {
 
             try {
                 ResponseEntity<M4dResponseInfo> response = restTemplate.exchange(
-                        REGISTRY_M4D_URI,
+                        BASE_URI + REGISTRY_M4D_URI,
                         HttpMethod.POST,
                         requestEntity,
                         M4dResponseInfo.class
@@ -128,7 +128,7 @@ public class RealApiService {
 
             try {
                 ResponseEntity<M4dRevokeResponseInfo> response = restTemplate.exchange(
-                        REGISTRY_REVOKE_URI,
+                        BASE_URI + REGISTRY_REVOKE_URI,
                         HttpMethod.POST,
                         requestEntity,
                         M4dRevokeResponseInfo.class
@@ -169,7 +169,7 @@ public class RealApiService {
 
             try {
                 ResponseEntity<M4dFnsDataResponse> response = restTemplate.exchange(
-                        REGISTRY_M4D_URI + "/" + guidXml + "/public",
+                        BASE_URI + REGISTRY_M4D_URI + "/" + guidXml + "/public",
                         HttpMethod.GET,
                         requestEntity,
                         M4dFnsDataResponse.class
@@ -207,7 +207,7 @@ public class RealApiService {
             headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
             HttpEntity<String> requestEntity = new HttpEntity<>(headers);
 
-            String urlTemplate = REGISTRY_M4D_URI + "/zip/?poaNumber={poaNumber}&issuerInn={issuerInn}&representativeInn={representativeInn}";
+            String urlTemplate = BASE_URI + REGISTRY_M4D_URI + "/zip/?poaNumber={poaNumber}&issuerInn={issuerInn}&representativeInn={representativeInn}";
 
             Map<String, String> params = Map.of(
                     "poaNumber", requestDto.getGuid(),
@@ -240,19 +240,15 @@ public class RealApiService {
 
     private AuthResponse getBearerRequest() throws JsonProcessingException {
         AuthResponse authResponse = new AuthResponse();
-        if (isResourceAvailable(String.valueOf(GET_TOKEN_URI))) {
+        if (isResourceAvailable(String.valueOf(BASE_URI))) {
             HttpHeaders headers = createHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.ALL));
-            String auth = USER_NAME + ":" + USER_PASSWORD;
-            byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
-            String authHeader = "Basic " + new String(encodedAuth);
-            headers.set("Authorization", authHeader);
+            headers.setBasicAuth(USER_NAME, USER_PASSWORD);
             String requestBody = "{ \"username\": \"operator\", \"password\": \"operator\", \"grant_type\": \"password\" }";
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
             try {
                 ResponseEntity<AuthResponse> response = restTemplate.exchange(
-                        GET_TOKEN_URI,
+                        BASE_URI + GET_TOKEN_URI,
                         HttpMethod.POST,
                         requestEntity,
                         AuthResponse.class
@@ -269,7 +265,7 @@ public class RealApiService {
             AuthResponse.Error error = new AuthResponse.Error();
             error.setStatus(503);
             error.setTitle("Service Unavailable");
-            error.setInstance(String.valueOf(GET_TOKEN_URI));
+            error.setInstance(BASE_URI + GET_TOKEN_URI);
             authResponse.setError(error);
             return authResponse;
         }
