@@ -72,6 +72,8 @@ secret:
     # http://pvv-adapter-service.release-ok.svc.cluster.local:8078/api/v1/manual/rrm4d/send-revocation-request-json
     FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvcnJtNGQvc2VuZC1yZXZvY2F0aW9uLXJlcXVlc3QtanNvbg==
     ACTUATOR_ENDPOINTS: aGVhbHRoLGluZm8=
+    #pvv-rr-m4d-adapter-dev
+    APPLICATION_NAME: cHZ2LXJyLW00ZC1hZGFwdGVyLWRldg==
 
 jvmOptions:
   xms: 256m
@@ -86,6 +88,8 @@ jvmOptions:
   localOnlyJMX: false
   timezone: UTC
   encoding: UTF-8
+  logFilePath: /var/log/pep
+  logFileName: pvv-rr-m4d-adapter-dev.log
 
 jarFile: pvv-rr-m4d-adapter-0.0.1-SNAPSHOT.jar
 
@@ -109,6 +113,7 @@ env:
   FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI: FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI
   FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI
   ACTUATOR_ENDPOINTS: ACTUATOR_ENDPOINTS
+  APPLICATION_NAME: APPLICATION_NAME
 
 appName: pvv-rr-m4d-adapter
 

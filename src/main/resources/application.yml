@@ -2,12 +2,16 @@ server:
   port: ${SERVER_PORT:8057}
 
 logging:
+  file:
+    name: ${LOGGING_FILE_NAME:pvv-rr-m4d-adapter.log}
+    path: ${LOGGING_FILE_PATH:log/pvv-rr-m4d-adapter}
   level:
-    su.opencode.digsigcik.pvv-rr-m4d-adapter: DEBUG
     org.springframework.web: DEBUG
-    org.apache.http: DEBUG
+    su.opencode.digsigcik.pvva: DEBUG
 
 spring:
+  application:
+    name: ${APPLICATION_NAME:pvv-rr-m4d-adapter}
   #  hotfix for running swagger in spring boot 2
   mvc:
     pathmatch:
