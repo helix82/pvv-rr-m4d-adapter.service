@@ -60,6 +60,9 @@ spec:
             - "-XX:MaxHeapFreeRatio={{ .Values.jvmOptions.maxHeapFreeRatio }}"
             - -jar
             - "{{ .Values.jarFile }}"
+          volumeMounts:
+            - name: pvv-rr-m4d-adapter-logs
+              mountPath: {{ .Values.jvmOptions.logFilePath }}
           ports:
             - containerPort: {{ .Values.service.port }}
             - containerPort: {{ .Values.service.portJMX }}
@@ -159,6 +162,16 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
                   key: {{ .Values.env.ACTUATOR_ENDPOINTS }}
+            - name: APPLICATION_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: {{ .Values.env.APPLICATION_NAME }}
+      volumes:
+        - name: pvv-rr-m4d-adapter-logs
+          hostPath:
+            path: {{ .Values.jvmOptions.logFilePath }}
+            type: DirectoryOrCreate
       imagePullSecrets:
         {{- range .Values.imagePullSecrets }}
         - name: {{ . }}
