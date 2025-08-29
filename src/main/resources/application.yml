@@ -6,8 +6,9 @@ logging:
     name: ${LOGGING_FILE_NAME:pvv-rr-m4d-adapter.log}
     path: ${LOGGING_FILE_PATH:log/pvv-rr-m4d-adapter}
   level:
+    su.opencode.digsigcik.pvv_rr_m4d_adapter: DEBUG
     org.springframework.web: DEBUG
-    su.opencode.digsigcik.pvva: DEBUG
+    org.apache.http: DEBUG
 
 spring:
   application:
