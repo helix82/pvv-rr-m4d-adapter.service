@@ -57,6 +57,9 @@ public class M4dRequestController {
     })
     @PostMapping(value ="/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadM4dZip(@RequestParam("file") MultipartFile zipFile) throws IOException {
+
+        log.debug("ПВВ: запрос на регистрацию");
+
         String fileName = zipFile.getOriginalFilename();
         if (fileName != null && realApiService.isNotZipFile(ConvertUtils.convertMultipartFileToFile(zipFile))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NO_ZIP);
@@ -87,6 +90,9 @@ public class M4dRequestController {
     })
     @PostMapping(value = "/receive")
     public ResponseEntity<?> getM4dRequestStatus(@RequestBody String json, HttpServletResponse response) throws JsonProcessingException {
+
+        log.debug("ПВВ: статус");
+
         CheckByGuidRequestDto requestDto = ConvertUtils.convertStringToClass(json, CheckByGuidRequestDto.class);
         String guidXml = requestDto.getGuid();
         List<String> files = List.of();
@@ -229,6 +235,9 @@ public class M4dRequestController {
     })
     @PostMapping(value ="/revoke/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadM4dRevokeZip(@RequestParam("file") MultipartFile zipFile) throws IOException {
+
+        log.debug("ПВВ: отзыв");
+
         String fileName = zipFile.getOriginalFilename();
         if (fileName != null && realApiService.isNotZipFile(ConvertUtils.convertMultipartFileToFile(zipFile))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NO_ZIP);
