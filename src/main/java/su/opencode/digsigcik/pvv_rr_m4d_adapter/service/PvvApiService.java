@@ -43,29 +43,30 @@ public class PvvApiService {
     }
 
     public String sendResponseRegisterM4dFromRR(M4dResponseInfo response) {
+        log.debug("Отправка сообщения REGISTRATION в ПВВ {}: {}", FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI, response);
         String res = sendJsonResponseM4dViaPvv(response, FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI);
-        log.info(String.valueOf(response));
-        log.info(res);
+        log.debug("Ответ от ПВВ: {}", res);
+
         return res;
     }
 
     public String sendResponseRevokeM4dFromRR(M4dRevokeResponseInfo response) {
+        log.debug("Отправка сообщения REVOKE в ПВВ {}: {}", FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI, response);
         String res = sendJsonResponseM4dRevokeViaPvv(response, FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI);
-        log.info(String.valueOf(response));
-        log.info(res);
+        log.debug("Ответ от ПВВ: {}", res);
+
         return res;
     }
 
     public String sendResponseStatusM4dFromRR(MultipartFile file) {
+        log.debug("Отправка сообщения STATUS в ПВВ {}: {}", FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI, file.getOriginalFilename());
         String res = sendFileResponseM4dViaPvv(file, FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI);
-        log.info(String.valueOf(file));
-        log.info(res);
+        log.debug("Ответ от ПВВ: {}", res);
         return res;
     }
 
     private String sendJsonResponseM4dViaPvv(M4dResponseInfo response, URI uri) {
         try {
-            log.debug("Отправка json-ответа {}...", response);
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
             headers.setContentType(MediaType.APPLICATION_JSON); // если тело JSON
@@ -86,7 +87,6 @@ public class PvvApiService {
 
     private String sendJsonResponseM4dRevokeViaPvv(M4dRevokeResponseInfo response, URI uri) {
         try {
-            log.debug("Отправка json-ответа {}...", response);
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
             headers.setContentType(MediaType.APPLICATION_JSON); // если тело JSON
@@ -107,7 +107,6 @@ public class PvvApiService {
 
     private String sendFileResponseM4dViaPvv(MultipartFile file, URI uri) {
         try {
-            log.debug("Отправка файла-ответа {}...", file);
             return restTemplate.postForEntity(
                             uri,
                             new HttpEntity<>(file.getBytes()),
