@@ -24,6 +24,10 @@ ingress:
       paths:
         - path: /
           pathType: ImplementationSpecific
+    - host: pvv-rr-m4d-adapter.pep.cikcp.ru
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
   tls:
     - secretName: pvv-rr-m4d-adapter-tls
       hosts:
