@@ -21,6 +21,13 @@ spec:
       labels:
         app: {{ .Values.appName }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
+
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+
       {{- if .Values.hostAliases }}
       hostAliases:
         {{- range .Values.hostAliases }}
@@ -31,7 +38,7 @@ spec:
             {{- end }}
         {{- end }}
       {{- end }}
-      terminationGracePeriodSeconds: 30
+
       containers:
         - name: {{ .Values.appName }}-dev
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
