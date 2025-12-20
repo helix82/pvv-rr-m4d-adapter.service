@@ -1,0 +1,137 @@
+
+namespace: dev-ok
+
+image:
+  repository: nexus.essocode.ru/ess/pvv-rr-m4d-adapter
+  tag: "{{.tag}}"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8057
+  targetPort: 8057
+  portJMX: 9010
+  targetPortJMX: 9010
+
+replicaCount: 1
+
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/issue-temporary-certificate: "true"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    ingress.kubernetes.io/ssl-redirect: "true"
+  tlsEnabled: true  # New parameter to control TLS
+  hosts:
+    - host: pvv-rr-m4d-adapter.dev.ok.essocode.ru
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: pvv-rr-m4d-adapter-dev-tls
+      hosts:
+        - pvv-rr-m4d-adapter.dev.ok.essocode.ru
+
+secret:
+  enabled: true
+  name: dev-ok-pvv-rr-m4d-adapter-back-cred
+  data:
+    #jdbc:postgresql://192.168.17.1:5432/dev_pvv_rr_m4d_adapter_db
+    SPRING_DATASOURCE_URL: amRiYzpwb3N0Z3Jlc3FsOi8vMjE3Ljc5LjIyLjQ2OjU0MzIvZGV2X3B2dl9ycl9tNGRfYWRhcHRlcl9kYg==
+    SPRING_DATASOURCE_USERNAME: cm9vdA==
+    SPRING_DATASOURCE_PASSWORD: cm9vdA==
+    #https://pvv-rr-m4d-adapter.dev.ok.essocode.ru
+    SWAGGER_URL: aHR0cHM6Ly9wdnYtcnItbTRkLWFkYXB0ZXIuZGV2LmVzc29jb2RlLnJ1
+    #http://log-service.dev.ok.svc.cluster.local:8055/api/v1/audit/external
+    AUDIT_URL: aHR0cDovL2xvZy1zZXJ2aWNlLmRldi5zdmMuY2x1c3Rlci5sb2NhbDo4MDU1L2FwaS92MS9hdWRpdC9leHRlcm5hbA==
+    SERVER_PORT: ODA1Nw==
+    #pep
+    RESOURCE_ACCESS: cGVw
+    # http://pvv-adapter-service.dev-ok.svc.cluster.local:8077/api/v1/inbox/
+    GET_PVV_CONTENT_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9pbmJveC8K
+    #https://operator.cprr-it.cprr.cloud
+    RR_M4D_BASE_URI: aHR0cHM6Ly9vcGVyYXRvci5jcHJyLWl0LmNwcnIuY2xvdWQ=
+    #/api/v0/vst-oauth2/oauth/token
+    RR_M4D_GET_TOKEN_URI: L2FwaS92MC92c3Qtb2F1dGgyL29hdXRoL3Rva2Vu
+    #/api/v0/poar-webapp/integration/poa
+    RR_M4D_REGISTRY_M4D_URI: L2FwaS92MC9wb2FyLXdlYmFwcC9pbnRlZ3JhdGlvbi9wb2E=
+    #/api/v0/poar-webapp/integration/poa/revoke
+    RR_M4D_REGISTRY_REVOKE_URI: L2FwaS92MC9wb2FyLXdlYmFwcC9pbnRlZ3JhdGlvbi9wb2EvcmV2b2tl
+    #demo-client
+    USER_NAME: ZGVtby1jbGllbnQ=
+    #secret
+    USER_PASSWORD: c2VjcmV0
+    M4D_SOUL: Ig==
+    # http://pvv-adapter-service.dev-ok.svc.cluster.local:8077/api/v1/manual/rrm4d/send-registration-request-json
+    FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvcnJtNGQvc2VuZC1yZWdpc3RyYXRpb24tcmVxdWVzdC1qc29u
+    # http://pvv-adapter-service.dev-ok.svc.cluster.local:8077/api/v1/manual/rrm4d/send-status-request-file
+    FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvcnJtNGQvc2VuZC1zdGF0dXMtcmVxdWVzdC1maWxl
+    # http://pvv-adapter-service.dev-ok.svc.cluster.local:8077/api/v1/manual/rrm4d/send-revocation-request-json
+    FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: aHR0cDovL3B2di1hZGFwdGVyLXNlcnZpY2UucmVsZWFzZS1vay5zdmMuY2x1c3Rlci5sb2NhbDo4MDc4L2FwaS92MS9tYW51YWwvcnJtNGQvc2VuZC1yZXZvY2F0aW9uLXJlcXVlc3QtanNvbg==
+    ACTUATOR_ENDPOINTS: aGVhbHRoLGluZm8=
+    #pvv-rr-m4d-adapter-dev-ok
+    APPLICATION_NAME: cHZ2LXJyLW00ZC1hZGFwdGVyLWRldg==
+
+jvmOptions:
+  xms: 256m
+  xmx: 384m
+  gc: "-XX:+UseG1GC"
+  minHeapFreeRatio: 10
+  maxHeapFreeRatio: 30
+  portJMX: 9010
+  authenticateJMX: false
+  sslJMX: false
+  hostnameJMX: localhost
+  localOnlyJMX: false
+  timezone: UTC
+  encoding: UTF-8
+  logFilePath: /var/log/pep
+  logFileName: pvv-rr-m4d-adapter-dev.log
+
+jarFile: pvv-rr-m4d-adapter-0.0.1-SNAPSHOT.jar
+
+env:
+  SPRING_DATASOURCE_URL: SPRING_DATASOURCE_URL
+  SPRING_DATASOURCE_USERNAME: SPRING_DATASOURCE_USERNAME
+  SPRING_DATASOURCE_PASSWORD: SPRING_DATASOURCE_PASSWORD
+  SWAGGER_URL: SWAGGER_URL
+  AUDIT_URL: AUDIT_URL
+  SERVER_PORT: SERVER_PORT
+  RESOURCE_ACCESS: RESOURCE_ACCESS
+  GET_PVV_CONTENT_URI: GET_PVV_CONTENT_URI
+  RR_M4D_BASE_URI: RR_M4D_BASE_URI
+  RR_M4D_GET_TOKEN_URI: RR_M4D_GET_TOKEN_URI
+  RR_M4D_REGISTRY_M4D_URI: RR_M4D_REGISTRY_M4D_URI
+  RR_M4D_REGISTRY_REVOKE_URI: RR_M4D_REGISTRY_REVOKE_URI
+  USER_NAME: USER_NAME
+  USER_PASSWORD: USER_PASSWORD
+  M4D_SOUL: M4D_SOUL
+  FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI: FNS_SEND_RESPONSE_REGISTRATION_REQUEST_M4D_URI
+  FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI: FNS_SEND_RESPONSE_STATUS_REQUEST_M4D_URI
+  FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI: FNS_SEND_RESPONSE_REVOKE_REQUEST_M4D_URI
+  ACTUATOR_ENDPOINTS: ACTUATOR_ENDPOINTS
+  APPLICATION_NAME: APPLICATION_NAME
+
+appName: pvv-rr-m4d-adapter
+
+nodeSelector:
+  kubernetes.io/hostname: sep-1
+
+terminationGracePeriodSeconds: 30
+
+deployment:
+  container:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+
+imagePullSecrets:
+  - registrypullsecret
+
+resources: {}

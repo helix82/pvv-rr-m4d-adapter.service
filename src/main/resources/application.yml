@@ -50,6 +50,11 @@ springdoc:
 management:
   endpoint:
     health:
+      group:
+        readiness:
+          include: db, readinessState
+      probes:
+        enabled: true
       show-details: always
   endpoints:
     web:
