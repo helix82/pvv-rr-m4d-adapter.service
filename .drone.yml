@@ -98,7 +98,7 @@ steps:
 #      - helm template k8s-pvv-rr-m4d-adapter-zk $HELM_PATH --namespace $HELM_NAMESPACE_ZK --values $HELM_PATH/ocode-dev-zk-values.yaml --set image.tag=${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT} > $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
       - test -s $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml
 #      - test -s $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml
-      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml > $HELM_PATH/k8s-m4d-dev-combined.yaml
+      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-ok.yaml > $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
 #      - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-zk.yaml >> $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
       - cat $HELM_PATH/k8s-pvv-rr-m4d-adapter-combined.yaml
     depends_on:
