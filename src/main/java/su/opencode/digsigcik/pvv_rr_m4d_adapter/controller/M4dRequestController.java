@@ -115,7 +115,27 @@ public class M4dRequestController {
     })
     @PostMapping(value ="/send/manual", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadM4dZipManual(@RequestParam("file") MultipartFile zipFile) throws IOException {
-        return this.uploadM4dZip(zipFile, "DUMMY");
+        log.debug("ПВВ: запрос на регистрацию");
+
+        String fileName = zipFile.getOriginalFilename();
+        if (fileName != null && realApiService.isNotZipFile(ConvertUtils.convertMultipartFileToFile(zipFile))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NO_ZIP);
+        }
+        try {
+            String res;
+            M4dResponseInfo response = realApiService.processM4dZip(zipFile);
+            res = pvvApiService.sendResponseRegisterM4dFromRR(response);
+
+            HttpHeaders headers = new HttpHeaders();
+            if (res != null) {
+                headers.set("X-Request-ID", res);
+            }
+            return new ResponseEntity<>(response, headers, HttpStatus.OK);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
     }
 
     @Operation(summary = CONTROLLER_GET_M4D_BY_STATUS,
@@ -330,7 +350,26 @@ public class M4dRequestController {
     })
     @PostMapping(value ="/revoke/send/manual", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadM4dRevokeZipManual(@RequestParam("file") MultipartFile zipFile) throws IOException {
-        return this.uploadM4dRevokeZip(zipFile, "DUMMY");
+        log.debug("ПВВ: отзыв");
+
+        String fileName = zipFile.getOriginalFilename();
+        if (fileName != null && realApiService.isNotZipFile(ConvertUtils.convertMultipartFileToFile(zipFile))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(NO_ZIP);
+        }
+        try {
+            String res;
+            M4dRevokeResponseInfo response = realApiService.processM4dRevokeZip(zipFile);
+            res = pvvApiService.sendResponseRevokeM4dFromRR(response);
+            HttpHeaders headers = new HttpHeaders();
+            if (res != null) {
+                headers.set("X-Request-ID", res);
+            }
+            return new ResponseEntity<>(response, headers, HttpStatus.OK);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
     }
 
     @Operation(summary = "Correlation id content")
