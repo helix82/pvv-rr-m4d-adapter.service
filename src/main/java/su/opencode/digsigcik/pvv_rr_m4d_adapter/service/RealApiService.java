@@ -14,7 +14,10 @@ import org.springframework.web.client.*;
 import org.springframework.web.multipart.MultipartFile;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.dto.*;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
+import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.CustomMultipartFile;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.HashUtils;
+import su.opencode.digsigcik.pvva.PvvResponse;
+import su.opencode.digsigcik.pvva.enums.PvvResponseType;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -34,6 +37,8 @@ import static su.opencode.digsigcik.pvv_rr_m4d_adapter.util.Constants.*;
 @RequiredArgsConstructor
 public class RealApiService {
     private final RestTemplate restTemplate;
+    private final MockApiService mockApiService;
+    private final PvvApiService pvvApiService;
 
     @Value("${rr-m4d.base-uri}")
     private String BASE_URI;
@@ -57,7 +62,7 @@ public class RealApiService {
     }
 
     public M4dResponseInfo createM4dRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws IOException, NoSuchAlgorithmException {
-        //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
+        //TODO: использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
         M4dResponseInfo responseInfo = new M4dResponseInfo();
         responseInfo.setPoaNumber(getGuidFromXml(xmlFile));
@@ -101,7 +106,7 @@ public class RealApiService {
     }
 
     public M4dRevokeResponseInfo createM4dRevokeRequest(File xmlFile, File sigFile, File xmlFileKvit, File sigFileKvit) throws IOException, NoSuchAlgorithmException {
-        //TODO: @helix82 использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
+        //TODO: использовать xmlFileKvit и sigFileKvit когда появится функционал в API РР МЧД по приёму подтверждения и подписи о регистрации в ПЭП
         AuthResponse authResponse;
         authResponse = getBearerRequest();
         M4dRevokeResponseInfo responseInfo = new M4dRevokeResponseInfo();
@@ -563,6 +568,35 @@ public class RealApiService {
             return false;
         } catch (IOException e) {
             return true;
+        }
+    }
+
+    public PvvResponse getM4dRequestStatusByGuid(String guidXml) {
+        List<String> files;
+        try {
+            M4dFnsDataResponse report = this.getM4dRequestStatus(guidXml);
+            if (report.getError() == null) {
+                files = mockApiService.createAndSignedM4dConfirm(report); //файлы подтверждения регистрации мчд в рр мчд
+                if (Objects.equals(report.getStatus(), "REVOKED")) {
+                    List<String> filesRevoke = mockApiService.createAndSignedM4dRevokeConfirm(report); //файлы подтверждения регистрации заявления на отзыв мчд в рр мчд
+                    files.addAll(filesRevoke);
+                }
+                File resource = this.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
+                MultipartFile zipFile = new CustomMultipartFile(resource);
+                return PvvResponse.builder()
+                        .responseType(PvvResponseType.OK)
+                        .filePayload(zipFile.getBytes())
+                        .build();
+            } else {
+                return PvvResponse.builder()
+                        .responseType(PvvResponseType.IDLE_CONTINUE)
+                        .build();
+            }
+        } catch (Exception e) {
+            return PvvResponse.builder()
+                    .responseType(PvvResponseType.FAILED)
+                    .errorDetails(e.getMessage())
+                    .build();
         }
     }
 

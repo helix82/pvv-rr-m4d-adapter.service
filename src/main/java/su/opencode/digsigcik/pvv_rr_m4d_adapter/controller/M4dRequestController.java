@@ -22,6 +22,8 @@ import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.PvvApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.service.RealApiService;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.ConvertUtils;
 import su.opencode.digsigcik.pvv_rr_m4d_adapter.util.CustomMultipartFile;
+import su.opencode.digsigcik.pvva.PvvResponse;
+import su.opencode.digsigcik.pvva.enums.PvvResponseType;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -48,15 +50,17 @@ public class M4dRequestController {
         this.pvvApiService = pvvApiService;
     }
 
-    @Operation(summary = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS,
-            description = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS)
+    @Operation(summary = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_AUTO,
+            description = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_AUTO //, hidden = true
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
     @PostMapping(value ="/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadM4dZip(@RequestParam("file") MultipartFile zipFile) throws IOException {
+    public ResponseEntity<?> uploadM4dZip(@RequestParam("file") MultipartFile zipFile,
+                                          @RequestHeader(name = "common-id", defaultValue = "") String id) throws IOException {
 
         log.debug("ПВВ: запрос на регистрацию");
 
@@ -73,12 +77,45 @@ public class M4dRequestController {
             if (res != null) {
                 headers.set("X-Request-ID", res);
             }
-            return new ResponseEntity<>(response, headers, HttpStatus.OK);
+            return new ResponseEntity<>(PvvResponse.builder()
+                    .responseType(PvvResponseType.OK_SUBSCRIPTION_REQUIRED)
+                    .subscriptionData(Map.of(
+                            "method", "GET",
+                            "uri", String.format("/api/v1/receive/%s", response.getPoaNumber()),
+                            "successNamespace", "M4D_REGISTRATION_REQUEST_EXCHANGE_NAMESPACE_JSON"
+                    ))
+                    .jsonPayload(Map.of(
+                            "guid", response.getPoaNumber()
+                    ))
+                    .build(), headers, HttpStatus.OK);
+//            return ResponseEntity.ok(PvvResponse.builder()
+//                    .responseType(PvvResponseType.OK_SUBSCRIPTION_REQUIRED)
+//                    .subscriptionData(Map.of(
+//                            "method", "GET",
+//                            "uri", String.format("/api/v1/receive/%s", response.getPoaNumber()),
+//                            "successNamespace", "UCFK_ORDER_FK_REQUEST_EXCHANGE_NAMESPACE_JSON"
+//                    ))
+//                    .saveload(Map.of(
+//                            "guid", response.getPoaNumber()
+//                    ))
+//                    .build());
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS,
+            description = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
+            @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
+            @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
+    })
+    @PostMapping(value ="/send/manual", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadM4dZipManual(@RequestParam("file") MultipartFile zipFile) throws IOException {
+        return this.uploadM4dZip(zipFile, "DUMMY");
     }
 
     @Operation(summary = CONTROLLER_GET_M4D_BY_STATUS,
@@ -130,6 +167,19 @@ public class M4dRequestController {
         }
     }
 
+    @Operation(summary = CONTROLLER_GET_M4D_BY_STATUS_AUTO,
+            description = CONTROLLER_GET_M4D_BY_STATUS_AUTO //, hidden = true
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
+            @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
+            @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
+    })
+    @GetMapping(value = "/receive/{guidXml}", produces = "application/zip")
+    public ResponseEntity<?> getM4dRequestStatusByGuid(@PathVariable String guidXml) {
+        return ResponseEntity.ok(realApiService.getM4dRequestStatusByGuid(guidXml));
+    }
+
     @Operation(summary = CONTROLLER_GET_M4D_BY_STATUS,
             description = CONTROLLER_GET_M4D_BY_STATUS)
     @ApiResponses(value = {
@@ -137,8 +187,8 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
-    @GetMapping(value = "/receive/{guidXml}", produces = "application/zip")
-    public ResponseEntity<?> getM4dRequestStatusByGuid(@PathVariable String guidXml, HttpServletResponse response) {
+    @GetMapping(value = "/receive/manual/{guidXml}", produces = "application/zip")
+    public ResponseEntity<?> getM4dRequestStatusByGuidManual(@PathVariable String guidXml, HttpServletResponse response) {
         List<String> files = List.of();
         try {
             M4dFnsDataResponse report = realApiService.getM4dRequestStatus(guidXml);
@@ -226,15 +276,17 @@ public class M4dRequestController {
         }
     }
 
-    @Operation(summary = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_REVOKE,
-            description = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_REVOKE)
+    @Operation(summary = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_REVOKE_AUTO,
+            description = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_REVOKE_AUTO //, hidden = true
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
             @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
     @PostMapping(value ="/revoke/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadM4dRevokeZip(@RequestParam("file") MultipartFile zipFile) throws IOException {
+    public ResponseEntity<?> uploadM4dRevokeZip(@RequestParam("file") MultipartFile zipFile,
+                                                @RequestHeader(name = "common-id", defaultValue = "") String id) throws IOException {
 
         log.debug("ПВВ: отзыв");
 
@@ -250,12 +302,35 @@ public class M4dRequestController {
             if (res != null) {
                 headers.set("X-Request-ID", res);
             }
-            return new ResponseEntity<>(response, headers, HttpStatus.OK);
+            //return new ResponseEntity<>(response, headers, HttpStatus.OK);
+            return new ResponseEntity<>(PvvResponse.builder()
+                    .responseType(PvvResponseType.OK_SUBSCRIPTION_REQUIRED)
+                    .subscriptionData(Map.of(
+                            "method", "GET",
+                            "uri", String.format("/api/v1/receive/%s", response.getPoaNumber()),
+                            "successNamespace", "M4D_REVOCATION_REQUEST_EXCHANGE_NAMESPACE_JSON"
+                    ))
+                    .jsonPayload(Map.of(
+                            "guid", response.getPoaNumber()
+                    ))
+                    .build(), headers, HttpStatus.OK);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_REVOKE,
+            description = CONTROLLER_UPLOAD_ZIP_AND_GET_STATUS_REVOKE)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = API_RESPONSE_CODE_200_MESSAGE),
+            @ApiResponse(responseCode = "404", description = API_RESPONSE_CODE_404_MESSAGE),
+            @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
+    })
+    @PostMapping(value ="/revoke/send/manual", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadM4dRevokeZipManual(@RequestParam("file") MultipartFile zipFile) throws IOException {
+        return this.uploadM4dRevokeZip(zipFile, "DUMMY");
     }
 
     @Operation(summary = "Correlation id content")

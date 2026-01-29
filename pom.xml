@@ -123,6 +123,12 @@
             <artifactId>common-starter</artifactId>
             <version>1.2.16</version>
         </dependency>
+
+        <dependency>
+            <groupId>su.opencode.digsigcik</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.51</version>
+        </dependency>
     </dependencies>
 
     <build>
