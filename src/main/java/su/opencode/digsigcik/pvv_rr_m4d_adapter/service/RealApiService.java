@@ -583,9 +583,12 @@ public class RealApiService {
                 }
                 File resource = this.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
                 MultipartFile zipFile = new CustomMultipartFile(resource);
+                Map<String, Object> res = new HashMap<>();
+                res.put("file", zipFile.getBytes());
                 return PvvResponse.builder()
                         .responseType(PvvResponseType.OK)
-                        .filePayload(zipFile.getBytes())
+                        .jsonPayload(res)
+                        //.filePayload(zipFile.getBytes())
                         .build();
             } else {
                 return PvvResponse.builder()

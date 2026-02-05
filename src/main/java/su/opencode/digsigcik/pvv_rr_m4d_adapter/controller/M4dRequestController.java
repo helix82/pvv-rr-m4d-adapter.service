@@ -59,8 +59,7 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
     @PostMapping(value ="/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadM4dZip(@RequestParam("file") MultipartFile zipFile,
-                                          @RequestHeader(name = "common-id", defaultValue = "") String id) throws IOException {
+    public ResponseEntity<?> uploadM4dZip(@RequestParam("file") MultipartFile zipFile) throws IOException {
 
         log.debug("ПВВ: запрос на регистрацию");
 
@@ -71,7 +70,7 @@ public class M4dRequestController {
         try {
             String res;
             M4dResponseInfo response = realApiService.processM4dZip(zipFile);
-            res = pvvApiService.sendResponseRegisterM4dFromRR(response);
+            res = pvvApiService.sendResponseRegisterM4dFromRR(response, response.getPoaNumber());
 
             HttpHeaders headers = new HttpHeaders();
             if (res != null) {
@@ -124,7 +123,7 @@ public class M4dRequestController {
         try {
             String res;
             M4dResponseInfo response = realApiService.processM4dZip(zipFile);
-            res = pvvApiService.sendResponseRegisterM4dFromRR(response);
+            res = pvvApiService.sendResponseRegisterM4dFromRR(response, response.getPoaNumber());
 
             HttpHeaders headers = new HttpHeaders();
             if (res != null) {
@@ -164,7 +163,7 @@ public class M4dRequestController {
             }
             File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
             MultipartFile zipFile = new CustomMultipartFile(resource);
-            String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
+            String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile, guidXml);
             HttpHeaders headers = new HttpHeaders();
             if (res != null) {
                 headers.set("X-Request-ID", res);
@@ -221,7 +220,7 @@ public class M4dRequestController {
             }
             File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
             MultipartFile zipFile = new CustomMultipartFile(resource);
-            String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
+            String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile, guidXml);
             HttpHeaders headers = new HttpHeaders();
             if (res != null) {
                 headers.set("X-Request-ID", res);
@@ -273,7 +272,7 @@ public class M4dRequestController {
                 }
             File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
             MultipartFile zipFile = new CustomMultipartFile(resource);
-            String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile);
+            String res = pvvApiService.sendResponseStatusM4dFromRR(zipFile, guidXml);
             HttpHeaders headers = new HttpHeaders();
             if (res != null) {
                 headers.set("X-Request-ID", res);
@@ -305,8 +304,7 @@ public class M4dRequestController {
             @ApiResponse(responseCode = "400", description = API_RESPONSE_CODE_400_MESSAGE)
     })
     @PostMapping(value ="/revoke/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadM4dRevokeZip(@RequestParam("file") MultipartFile zipFile,
-                                                @RequestHeader(name = "common-id", defaultValue = "") String id) throws IOException {
+    public ResponseEntity<?> uploadM4dRevokeZip(@RequestParam("file") MultipartFile zipFile) throws IOException {
 
         log.debug("ПВВ: отзыв");
 
@@ -317,7 +315,7 @@ public class M4dRequestController {
         try {
             String res;
             M4dRevokeResponseInfo response = realApiService.processM4dRevokeZip(zipFile);
-            res = pvvApiService.sendResponseRevokeM4dFromRR(response);
+            res = pvvApiService.sendResponseRevokeM4dFromRR(response, response.getPoaNumber());
             HttpHeaders headers = new HttpHeaders();
             if (res != null) {
                 headers.set("X-Request-ID", res);
@@ -359,7 +357,7 @@ public class M4dRequestController {
         try {
             String res;
             M4dRevokeResponseInfo response = realApiService.processM4dRevokeZip(zipFile);
-            res = pvvApiService.sendResponseRevokeM4dFromRR(response);
+            res = pvvApiService.sendResponseRevokeM4dFromRR(response, response.getPoaNumber());
             HttpHeaders headers = new HttpHeaders();
             if (res != null) {
                 headers.set("X-Request-ID", res);
