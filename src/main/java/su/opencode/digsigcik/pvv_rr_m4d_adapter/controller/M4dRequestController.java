@@ -196,7 +196,30 @@ public class M4dRequestController {
     })
     @GetMapping(value = "/receive/{guidXml}", produces = "application/zip")
     public ResponseEntity<?> getM4dRequestStatusByGuid(@PathVariable String guidXml) {
-        return ResponseEntity.ok(realApiService.getM4dRequestStatusByGuid(guidXml));
+        List<String> files;
+        try {
+            M4dFnsDataResponse report = realApiService.getM4dRequestStatus(guidXml);
+            if (report.getError() == null) {
+                files = mockApiService.createAndSignedM4dConfirm(report); //файлы подтверждения регистрации мчд в рр мчд
+                if (Objects.equals(report.getStatus(), "REVOKED")) {
+                    List<String> filesRevoke = mockApiService.createAndSignedM4dRevokeConfirm(report); //файлы подтверждения регистрации заявления на отзыв мчд в рр мчд
+                    files.addAll(filesRevoke);
+                }
+                File resource = realApiService.createArchiveWithM4dRequestStatusToFile(guidXml, report, files);
+                MultipartFile zipFile = new CustomMultipartFile(resource);
+                return PvvResponse.multipartOkResponse(zipFile.getBytes());
+            } else {
+                return ResponseEntity.ok(PvvResponse.builder()
+                        .responseType(PvvResponseType.IDLE_CONTINUE)
+                        .build());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.ok(PvvResponse.builder()
+                    .responseType(PvvResponseType.FAILED)
+                    .errorDetails(e.getMessage())
+                    .build());
+        }
+        //return ResponseEntity.ok(realApiService.getM4dRequestStatusByGuid(guidXml));
     }
 
     @Operation(summary = CONTROLLER_GET_M4D_BY_STATUS,
